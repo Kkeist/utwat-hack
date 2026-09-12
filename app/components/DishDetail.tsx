@@ -1,0 +1,122 @@
+'use client';
+/**
+ * OWNER: Workstream D (UI)
+ *
+ * One dish, three presentations of the same content:
+ *   DishDetail — photo, name and price, ingredient tags, description.
+ *                `layout="row"` puts the photo beside the text (full view),
+ *                `layout="stack"` puts it on top (the dialog).
+ *   DishCard   — DishDetail in a bordered card, for the full view.
+ *   DishTile   — photo and name only, a button that opens the dialog.
+ *
+ * Everything the menu already told us renders at once; the photo and tags
+ * shimmer until the lookup lands.
+ */
+import type { Dish, DishFacts } from '@/lib/types';
+import { Skeleton } from './Skeleton';
+
+/**
+ * `placeholder` keeps a blank block when no photo exists, so rows and tiles
+ * stay aligned; the dialog passes false and simply has no picture.
+ */
+function Photo({
+  facts,
+  className,
+  placeholder = true,
+}: {
+  facts?: DishFacts;
+  className: string;
+  placeholder?: boolean;
+}) {
+  if (!facts) return <Skeleton className={className} />;
+  if (!facts.photoUrl) return placeholder ? <div aria-hidden className={`${className} bg-cream-deep`} /> : null;
+  /* eslint-disable-next-line @next/next/no-img-element */
+  return <img src={facts.photoUrl} alt="" className={`${className} border border-gold-soft object-cover`} />;
+}
+
+export function DishDetail({
+  dish,
+  facts,
+  layout,
+}: {
+  dish: Dish;
+  facts?: DishFacts;
+  layout: 'row' | 'stack';
+}) {
+  const lookedUp = facts?.description && facts.description !== dish.description;
+
+  return (
+    <div className={layout === 'row' ? 'grid gap-4 sm:grid-cols-[9rem_1fr]' : 'grid gap-4'}>
+      <Photo
+        facts={facts}
+        className={layout === 'row' ? 'aspect-[4/3] w-full' : 'aspect-[3/2] w-full'}
+        placeholder={layout === 'row'}
+      />
+
+      <div>
+        <div className="flex items-baseline">
+          <span className={`font-semibold leading-tight ${layout === 'row' ? 'text-xl' : 'text-2xl'}`}>
+            {dish.name}
+          </span>
+          {dish.price && (
+            <>
+              <span aria-hidden className="leader mx-2" />
+              <span className="shrink-0 text-xl font-semibold tabular-nums">{dish.price}</span>
+            </>
+          )}
+        </div>
+
+        {dish.description && (
+          <p className="text-base italic leading-snug text-ink-soft">{dish.description}</p>
+        )}
+
+        {facts ? (
+          facts.ingredients?.length ? (
+            <ul className="mt-2 flex flex-wrap gap-1.5">
+              {Array.from(new Set(facts.ingredients)).map((ingredient) => (
+                <li key={ingredient} className="tag">
+                  {ingredient}
+                </li>
+              ))}
+            </ul>
+          ) : null
+        ) : (
+          <Skeleton className="mt-2 h-7 w-3/4" />
+        )}
+
+        {lookedUp && <p className="mt-2 leading-relaxed">{facts.description}</p>}
+      </div>
+    </div>
+  );
+}
+
+export function DishCard({ dish, facts }: { dish: Dish; facts?: DishFacts }) {
+  return (
+    <article className="border border-gold-soft bg-paper-white/50 p-4">
+      <DishDetail dish={dish} facts={facts} layout="row" />
+    </article>
+  );
+}
+
+export function DishTile({
+  dish,
+  facts,
+  onOpen,
+}: {
+  dish: Dish;
+  facts?: DishFacts;
+  onOpen: (dish: Dish) => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-dish-tile
+      onClick={() => onOpen(dish)}
+      className="group block w-full text-left"
+    >
+      <Photo facts={facts} className="aspect-square w-full" />
+      <span className="mt-1.5 block leading-tight font-medium group-hover:text-tomato">{dish.name}</span>
+      {dish.price && <span className="block text-base text-ink-soft tabular-nums">{dish.price}</span>}
+    </button>
+  );
+}

@@ -26,25 +26,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${serif.variable} ${script.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        {/* The table: kraft paper with fibre, always one viewport, behind everything. */}
-        <div aria-hidden className="paper-grain pointer-events-none fixed inset-0 z-0 bg-ground" />
-
         {/*
-          The room: green linen walls either side. `position: fixed` boxes size
-          to the viewport, so they run the full height however long the page
-          gets — a `background-attachment: fixed` on body stops after one screen.
+          The room. Table and walls are absolutely positioned inside a wrapper
+          that is as tall as the document, so they run the full height of any
+          page — real columns, not viewport-fixed overlays.
         */}
-        <div
-          aria-hidden
-          className="linen paper-grain pointer-events-none fixed inset-y-0 left-0 z-[1] hidden w-[14%] min-[900px]:block"
-        />
-        <div
-          aria-hidden
-          className="linen paper-grain pointer-events-none fixed inset-y-0 right-0 z-[1] hidden w-[14%] min-[900px]:block"
-        />
+        <div className="relative flex min-h-full flex-1 flex-col">
+          <div aria-hidden className="paper-grain pointer-events-none absolute inset-0 z-0 bg-ground" />
+          <div
+            aria-hidden
+            className="linen paper-grain pointer-events-none absolute inset-y-0 left-0 z-[1] hidden w-[14%] min-[900px]:block"
+          />
+          <div
+            aria-hidden
+            className="linen paper-grain pointer-events-none absolute inset-y-0 right-0 z-[1] hidden w-[14%] min-[900px]:block"
+          />
 
-        {/* Content stays clear of the walls: the same 14% is reserved on each side. */}
-        <div className="relative z-10 flex min-h-full flex-1 flex-col min-[900px]:px-[14%]">{children}</div>
+          {/* Content stays clear of the walls: the same 14% is reserved on each side. */}
+          <div className="relative z-10 flex flex-1 flex-col min-[900px]:px-[14%]">{children}</div>
+        </div>
       </body>
     </html>
   );

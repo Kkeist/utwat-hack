@@ -16,6 +16,7 @@
   --room-deep: #243528;
   --cream: #f7eddb;
   --cream-deep: #eddfc4;
+  --paper-white: #fdf8ec;
   --ink: #2a1b10;
   --ink-soft: #6e5a44;
   --tomato: #bf3220;
@@ -30,6 +31,7 @@
   --color-room-deep: var(--room-deep);
   --color-cream: var(--cream);
   --color-cream-deep: var(--cream-deep);
+  --color-paper-white: var(--paper-white);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-tomato: var(--tomato);
@@ -48,7 +50,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--tomato);
+  outline: 2px solid var(--room);
   outline-offset: 3px;
 }
 
@@ -148,6 +150,38 @@ body {
   min-width: 1.5rem;
   border-bottom: 2px dotted var(--gold-soft);
   transform: translateY(-0.35em);
+}
+
+/*
+ * Text fields: near-white paper, a single gold hairline, green when focused.
+ * The focus ring replaces the outline so there is never a red or blue box.
+ */
+.field {
+  background: var(--paper-white);
+  border: 1.5px solid var(--gold);
+  border-radius: 0;
+  color: var(--ink);
+}
+.field::placeholder {
+  color: var(--ink-soft);
+}
+.field:focus-visible {
+  outline: none;
+  border-color: var(--room);
+  box-shadow: 0 0 0 3px rgba(47, 68, 52, 0.18);
+}
+input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+/* Ingredient tag. */
+.tag {
+  display: inline-block;
+  border: 1px solid var(--gold-soft);
+  background: var(--paper-white);
+  padding: 0.1rem 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 /* Number input without the browser's spinner. */
