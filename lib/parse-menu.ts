@@ -49,7 +49,10 @@ export function parseMenu(markdown: string): Dish[] {
   const dishes: Dish[] = [];
   let category: string | undefined;
 
-  for (const line of markdown.split('\n')) {
+  // Split on CRLF as well as LF. Git hands Windows checkouts CRLF and scraped
+  // pages carry it too; a trailing \r defeats any regex anchored with $, which
+  // silently drops every category and files the whole menu as 'other'.
+  for (const line of markdown.split(/\r?\n/)) {
     const heading = line.match(/^#{1,6}\s+(.*)$/);
     if (heading) {
       category = heading[1].trim();
