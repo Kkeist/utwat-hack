@@ -7,15 +7,16 @@
  * a single look on purpose; not theme-aware.
  */
 :root {
-  --background: #ecdcb9;
-  --awning: #fbf3e4;
-  --surface: #fdf8ee;
-  --border: #d8c39a;
-  --foreground: #2a2018;
-  --muted: #8d7a5c;
-  --accent: #e0932e;
-  --accent-2: #b23a2c;
-  --ink: #221b14;
+  --background: #f7ecd8;
+  --awning: #fffbf2;
+  --surface: #fffdf8;
+  --border: #d7b487;
+  --foreground: #3a2a1a;
+  --muted: #9c8563;
+  --accent: #e8892e;
+  --accent-2: #ad3a2a;
+  --ink: #1c140d;
+  --side-panel: #caa06c;
 }
 
 @theme inline {
@@ -28,6 +29,7 @@
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-ink: var(--ink);
+  --color-side-panel: var(--side-panel);
   --font-serif: var(--font-menu-serif);
   --font-sans: var(--font-menu-sans);
   --font-logo: var(--font-menu-logo);
@@ -41,16 +43,22 @@ body {
 }
 
 /*
- * Stage-curtain vignette: the two side margins read as a darker frame around
- * the centered content, like the sketch's web layout. Only kicks in once
- * there's actual margin to darken — on a phone-width viewport the content
- * fills the screen and there is no "side" to shade.
+ * Stage-curtain side panels: flat color, hard edge, no gradient — each stop
+ * pair sits at the same position so the color cuts instead of blending.
+ * Only kicks in once there's actual margin to split — on a phone-width
+ * viewport the content fills the screen and there is no "side" left.
  */
 @media (min-width: 900px) {
   body {
-    background:
-      linear-gradient(90deg, rgba(66, 41, 20, 0.4), transparent 18%, transparent 82%, rgba(66, 41, 20, 0.4)),
-      var(--background);
+    background: linear-gradient(
+      90deg,
+      var(--side-panel) 0,
+      var(--side-panel) 16%,
+      var(--background) 16%,
+      var(--background) 84%,
+      var(--side-panel) 84%,
+      var(--side-panel) 100%
+    );
     background-attachment: fixed;
   }
 }
