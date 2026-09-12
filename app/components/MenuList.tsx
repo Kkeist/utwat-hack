@@ -19,18 +19,18 @@ export function MenuList({
   onSelect: (dish: Dish) => void;
 }) {
   return (
-    <ul className="divide-y divide-border">
+    <ul className="divide-border divide-y border-[3px] border-ink bg-surface px-5">
       {dishes.map((dish) => (
         <li key={`${dish.category}-${dish.name}`}>
           <button
             onClick={() => onSelect(dish)}
-            className="flex w-full items-baseline justify-between gap-4 py-2 text-left hover:text-accent"
+            className="flex w-full items-baseline justify-between gap-4 py-3 text-left hover:text-accent"
           >
-            <span>
+            <span className="font-serif text-lg">
               {dish.name}
               {facts[dish.name] && <span className="ml-2 text-xs text-muted">·</span>}
             </span>
-            <span className="text-muted">{dish.price}</span>
+            <span className="font-bold text-muted">{dish.price}</span>
           </button>
         </li>
       ))}

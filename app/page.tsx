@@ -89,7 +89,7 @@ export default function Home() {
             </section>
 
             <section className="mt-12">
-              <h2 className="mb-3 text-xl">The full menu</h2>
+              <h2 className="mb-3 text-xl font-extrabold">The full menu</h2>
               <MenuList
                 dishes={result.dishes}
                 facts={facts}

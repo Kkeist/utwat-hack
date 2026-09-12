@@ -12,13 +12,13 @@ import { Skeleton } from './Skeleton';
 
 export function PickCard({ pick, facts }: { pick: Pick; facts?: DishFacts }) {
   return (
-    <article className="rounded border border-border bg-surface p-5">
-      <p className="text-xs uppercase tracking-widest text-muted">
+    <article className="border-[3px] border-ink bg-surface p-5">
+      <p className="text-xs font-bold uppercase tracking-widest text-muted">
         {pick.shared ? `Shared ${pick.course}` : `Seat ${pick.seat} · ${pick.course}`}
       </p>
 
-      <h3 className="mt-1 text-2xl">{pick.dish.name}</h3>
-      {pick.dish.price && <p className="text-accent">{pick.dish.price}</p>}
+      <h3 className="font-serif mt-1 text-2xl">{pick.dish.name}</h3>
+      {pick.dish.price && <p className="font-bold text-accent">{pick.dish.price}</p>}
 
       <p className="mt-3 leading-relaxed">{pick.justification}</p>
 

@@ -11,13 +11,12 @@
   --background: #f4f2ec;
   --awning: #ffffff;
   --surface: #ffffff;
-  --border: #dcd8ce;
+  --border: #d8d3c6;
   --foreground: #262521;
   --muted: #85817a;
   --accent: #f2a922;
   --accent-2: #d94a3d;
   --ink: #262521;
-  --side-panel: #ded9cc;
   --stripe: #f7c948;
 }
 
@@ -31,36 +30,21 @@
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-ink: var(--ink);
-  --color-side-panel: var(--side-panel);
   --font-serif: var(--font-menu-serif);
   --font-sans: var(--font-menu-sans);
 }
 
+/*
+ * Inter everywhere by default — the serif is reserved for dish names only
+ * (applied directly where those render), not the whole page. A previous
+ * pass left the page-wide default on the serif, which made every heading
+ * in the results section render in an italic-leaning display face that
+ * had nothing to do with the sans-serif hero above it.
+ */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-menu-serif), Georgia, "Times New Roman", serif;
-}
-
-/*
- * Stage-curtain side panels: flat color, hard edge, no gradient — each stop
- * pair sits at the same position so the color cuts instead of blending.
- * Only kicks in once there's actual margin to split — on a phone-width
- * viewport the content fills the screen and there is no "side" left.
- */
-@media (min-width: 900px) {
-  body {
-    background: linear-gradient(
-      90deg,
-      var(--side-panel) 0,
-      var(--side-panel) 16%,
-      var(--background) 16%,
-      var(--background) 84%,
-      var(--side-panel) 84%,
-      var(--side-panel) 100%
-    );
-    background-attachment: fixed;
-  }
+  font-family: var(--font-menu-sans), system-ui, sans-serif;
 }
 
 /* Shimmer for the enrichment skeletons. Nothing blocks on a lookup. */
