@@ -83,6 +83,16 @@ Round 3, same evening.
 - [x] Collapsed ingredient filter: Include / Exclude, type-to-search with
       chips inside the box, plus a click-to-pick list
 
+Round 4, 2026-09-12 — merged the original repo's workstream-c (parser,
+roulette, justify, review-signals), owner said go ahead and connect it into
+one flow.
+
+- [x] Reversal of the round-2 call: the judge-style verdict is now shown,
+      in the dish detail dialog, under a "The verdict" divider — only for
+      dishes that were one of the roulette's picks
+- [x] `/api/justify`'s Claude upgrade is now called after every menu load,
+      silently replacing the templated verdict when it lands
+
 ## Tech stack
 
 - Web-agent scraping step uses [Steel.dev](https://steel.dev) (cloud

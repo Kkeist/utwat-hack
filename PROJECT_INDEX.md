@@ -39,8 +39,8 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 - `controls.tsx` — `ButtonLink`, `ToggleGroup`, `SearchField`: one outlined
   control style for the whole app.
 - `DishDetail.tsx` — `DishDetail` (photo, name, price, ingredient tags,
-  description; `layout` row or stack), `DishCard` (full view), `DishTile`
-  (compact view).
+  description, verdict when the dish was a pick; `layout` row or stack),
+  `DishCard` (full view), `DishTile` (compact view).
 - `IngredientFilter` — collapsed Include / Exclude filter: chips inside the
   box, type-to-narrow, click-to-pick list.
 - `Modal` — centred dialog, pinned Close, locks background scroll, Escape closes.
@@ -70,9 +70,6 @@ two views are client-side over the loaded list.
 ## Open
 
 - Real scrape path (`lib/scrape-menu.ts`) is still a stub.
-- Judge-style pick copy is returned by the API but not shown (owner's
-  round-2 call). `POST /api/justify` can upgrade it via Claude but nothing
-  on the client calls that route.
 - Review signals (`lib/review-signals.ts`) score real review text when
   workstream B's scrape lands; mocked runs use `lib/fixtures/sample-signals.ts`.
   Nothing calls `lib/review-signals-llm.ts`'s Claude-backed scorer yet.

@@ -13,6 +13,7 @@
  * shimmer until the lookup lands.
  */
 import type { Dish, DishFacts } from '@/lib/types';
+import { copy } from '../copy';
 import { Skeleton } from './Skeleton';
 
 /**
@@ -38,10 +39,13 @@ export function DishDetail({
   dish,
   facts,
   layout,
+  verdict,
 }: {
   dish: Dish;
   facts?: DishFacts;
   layout: 'row' | 'stack';
+  /** Present only when this dish was one of the roulette's picks. */
+  verdict?: string;
 }) {
   const lookedUp = facts?.description && facts.description !== dish.description;
 
@@ -85,6 +89,13 @@ export function DishDetail({
         )}
 
         {lookedUp && <p className="mt-2 leading-relaxed">{facts.description}</p>}
+
+        {verdict && (
+          <div className="mt-3 border-t border-gold-soft pt-3">
+            <p className="text-sm font-semibold tracking-wide text-ink-soft">{copy.verdict}</p>
+            <p className="mt-1 leading-relaxed">{verdict}</p>
+          </div>
+        )}
       </div>
     </div>
   );

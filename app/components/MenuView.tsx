@@ -91,6 +91,34 @@ export function MenuView() {
       setFacts((prev) => ({ ...json.facts, ...prev }));
     }
 
+    /**
+     * Optional: ask Claude for better-written verdicts. The templated text is
+     * already on screen, so this only ever replaces it with something better —
+     * an empty response means Claude was unreachable or unconfigured, and the
+     * template stays with no user-visible difference.
+     */
+    async function upgradeVerdicts(menu: MenuResponse) {
+      if (!menu.picks.length) return;
+      try {
+        const res = await fetch('/api/justify', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ picks: menu.picks, partySize: menu.partySize, signals: menu.signals }),
+        });
+        if (!res.ok || cancelled) return;
+        const { justifications } = await res.json();
+        if (!justifications || !Object.keys(justifications).length) return;
+        setResult((prev) =>
+          prev && {
+            ...prev,
+            picks: prev.picks.map((p) => ({ ...p, justification: justifications[p.dish.name] ?? p.justification })),
+          },
+        );
+      } catch {
+        // Keep the templated text. Not a user-visible failure.
+      }
+    }
+
     async function load() {
       setError(null);
       setResult(null);
@@ -107,6 +135,7 @@ export function MenuView() {
         const menu = json as MenuResponse;
         setResult(menu);
         setFacts(menu.facts);
+        void upgradeVerdicts(menu);
         const cold = menu.dishes.filter((d) => !menu.facts[d.name]);
         for (let i = 0; i < cold.length; i += BATCH) {
           await enrich(cold.slice(i, i + BATCH));
@@ -160,6 +189,12 @@ export function MenuView() {
       return true;
     });
   }, [result, facts, query, ingredients, ingredientMode]);
+
+  /** The verdict for a dish, if it was one of the roulette's picks. */
+  const verdictFor = useCallback(
+    (name: string) => result?.picks.find((p) => p.dish.name === name)?.justification,
+    [result],
+  );
 
   const close = useCallback(() => setOpenDish(null), []);
   const filtering = query.trim().length > 0 || ingredients.length > 0;
@@ -252,7 +287,14 @@ export function MenuView() {
       <footer className="pb-8 text-center text-base italic text-ink-soft">{copy.madeBy}</footer>
 
       <Modal open={openDish !== null} onClose={close}>
-        {openDish && <DishDetail dish={openDish} facts={facts[openDish.name]} layout="stack" />}
+        {openDish && (
+          <DishDetail
+            dish={openDish}
+            facts={facts[openDish.name]}
+            layout="stack"
+            verdict={verdictFor(openDish.name)}
+          />
+        )}
       </Modal>
     </>
   );
