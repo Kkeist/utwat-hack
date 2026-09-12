@@ -2,8 +2,9 @@
  * OWNER: Workstream D (UI)
  *
  * The awning banner: pleated fabric (`.awning-pleats`, globals.css), the
- * fork/knife icons as rivet-like circle badges, the DISHLY wordmark, and a
- * scalloped valance along the bottom edge.
+ * fork/knife artwork (each already a full plate-plus-utensil illustration —
+ * no extra badge frame drawn around it, that would just double the plate
+ * motif), the DISHLY wordmark, and a scalloped valance along the bottom edge.
  *
  * The valance is NOT a separate shape stacked under a rectangular content
  * box — that reads as two pieces glued together at a seam. Instead the
@@ -17,13 +18,6 @@
  */
 import Image from 'next/image';
 
-function IconBadge({ src }: { src: string }) {
-  return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[3px] border-ink sm:h-14 sm:w-14">
-      <Image src={src} alt="" width={28} height={28} className="h-6 w-6 sm:h-7 sm:w-7" />
-    </span>
-  );
-}
 
 const SCALLOP_STROKE_PATH =
   'M0,4 Q40,80 85,10 Q125,84 178,14 Q222,78 262,6 Q305,86 352,16 Q396,76 440,8 Q482,84 528,18 Q565,74 600,5';
@@ -52,9 +46,9 @@ export function Header() {
       */}
       <div className="awning-pleats w-full bg-awning">
         <div className="mx-auto flex max-w-3xl items-center justify-center gap-4 px-6 pt-8 pb-4 sm:gap-8 sm:pt-10 sm:pb-6">
-          <IconBadge src="/icons/fork.svg" />
+          <Image src="/icons/fork.png" alt="" width={80} height={80} className="h-14 w-14 shrink-0 sm:h-20 sm:w-20" />
           <h1 className="font-logo text-4xl text-accent sm:text-6xl">DISHLY</h1>
-          <IconBadge src="/icons/knife.svg" />
+          <Image src="/icons/knife.png" alt="" width={80} height={80} className="h-14 w-14 shrink-0 sm:h-20 sm:w-20" />
         </div>
       </div>
 
