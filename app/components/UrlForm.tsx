@@ -1,53 +1,51 @@
 'use client';
-/** OWNER: Workstream D (UI) — the entry point. URL + party size. */
+/** OWNER: Workstream D (UI) — the entry point. URL + party size + the plate. */
 import { useState } from 'react';
+import { copy } from '../copy';
 
-export function UrlForm({
-  onSubmit,
-  busy,
-}: {
-  onSubmit: (url: string, partySize: number) => void;
-  busy: boolean;
-}) {
-  const [url, setUrl] = useState('');
+export function UrlForm({ onSubmit }: { onSubmit: (url: string, partySize: number) => void }) {
+  const [url, setUrl] = useState<string>(copy.testUrl);
   const [partySize, setPartySize] = useState(2);
+
+  const clamp = (n: number) => Math.min(12, Math.max(1, n));
 
   return (
     <form
-      className="flex flex-col gap-4 sm:flex-row sm:items-end"
+      className="flex flex-col items-center gap-6"
       onSubmit={(e) => {
         e.preventDefault();
         if (url.trim()) onSubmit(url.trim(), partySize);
       }}
     >
-      <label className="flex-1 text-sm text-muted">
-        Restaurant
-        <input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://…"
-          className="mt-1 w-full rounded border border-border bg-surface px-3 py-2 text-base text-foreground outline-none focus:border-accent"
-        />
-      </label>
+      <input
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        placeholder={copy.urlPlaceholder}
+        aria-label={copy.urlLabel}
+        className="field w-full px-4 py-2 text-xl"
+      />
 
-      <label className="text-sm text-muted">
-        Party of
+      <label className="flex items-baseline gap-3 text-xl">
+        {copy.partySize}
         <input
           type="number"
           min={1}
           max={12}
           value={partySize}
-          onChange={(e) => setPartySize(Number(e.target.value))}
-          className="mt-1 w-20 rounded border border-border bg-surface px-3 py-2 text-base text-foreground outline-none focus:border-accent"
+          onChange={(e) => setPartySize(clamp(Number(e.target.value) || 1))}
+          aria-label={copy.partySize}
+          className="field h-12 w-16 text-center text-3xl font-semibold"
         />
       </label>
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="rounded border border-accent px-5 py-2 text-base text-accent disabled:opacity-40"
-      >
-        {busy ? 'Deliberating…' : 'Spin'}
+      <button type="submit" className="group flex flex-col items-center gap-1">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icons/plate-mark.png"
+          alt=""
+          className="h-40 w-40 transition-transform duration-200 group-hover:scale-[1.04] group-active:scale-[0.98] motion-reduce:transition-none sm:h-52 sm:w-52"
+        />
+        <span className="text-2xl font-semibold tracking-[0.25em] text-ink uppercase">{copy.search}</span>
       </button>
     </form>
   );

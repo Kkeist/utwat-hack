@@ -45,19 +45,91 @@ export const SAMPLE_DISHES: Dish[] = [
   { name: 'Îles Flottantes', category: 'Prix Fixe' },
 ];
 
-/** Canned facts so the dish card can be styled without burning Steel calls. */
+/** Same shape lib/dish-lookup builds; kept local to avoid an import cycle. */
+const search = (name: string) => `https://www.google.com/search?q=${encodeURIComponent(`${name} dish`)}`;
+
+/**
+ * Canned facts so the dish cards can be styled without burning Steel calls.
+ * Opening sentence and lead photo of each dish's Wikipedia article, as the
+ * live lookup would return them. Dishes not listed here fall back to the
+ * menu's own description and a search link.
+ */
 export const SAMPLE_FACTS: Record<string, DishFacts> = {
-  'Duck Confit': {
-    name: 'Duck Confit',
-    description: 'Confit de canard is a French dish of duck leg cured in salt and slowly cooked in its own fat.',
-    photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Confit_de_canard.jpg/640px-Confit_de_canard.jpg',
-    searchUrl: 'https://www.google.com/search?q=Duck+Confit+dish',
+  'Soupe à l\'Oignon': {
+    name: 'Soupe à l\'Oignon',
+    description: 'French onion soup is a soup of onions which are sautéed and then cooked in meat stock or water, usually served gratinéed with croutons or a larger piece of bread covered with cheese floating on top.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Soupe_%C3%A0_l%27oignon.jpg/960px-Soupe_%C3%A0_l%27oignon.jpg',
+    searchUrl: search('Soupe à l\'Oignon'),
+    source: 'wikipedia',
+  },
+  'Escargots': {
+    name: 'Escargots',
+    description: 'Snails are eaten by humans in many areas such as Africa, Southeast Asia and Mediterranean Europe, while in other cultures, snails are seen as a taboo food.',
+    photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Caracoles-del-restaurante-granero.jpg',
+    searchUrl: search('Escargots'),
+    source: 'wikipedia',
+  },
+  'Caesar Salad': {
+    name: 'Caesar Salad',
+    description: 'A Caesar salad, also known as Caesar\'s salad, is a green salad of romaine lettuce and croutons commonly dressed with lemon juice, olive oil, eggs, Worcestershire sauce, anchovies, garlic, Dijon mustard, Parmesan and black pepper.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Caesar_salad_%282%29.jpg/960px-Caesar_salad_%282%29.jpg',
+    searchUrl: search('Caesar Salad'),
     source: 'wikipedia',
   },
   'Steak Frites': {
     name: 'Steak Frites',
-    description: 'Steak frites is a dish of steak paired with french fries, common in European restaurants.',
-    searchUrl: 'https://www.google.com/search?q=Steak+Frites+dish',
+    description: 'Steak frites, meaning "steak [and] chipped potatoes" in French, is a dish consisting of beefsteak accompanied by fried chipped potatoes.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Reel_and_Brand_-_September_2021_-_Sarah_Stierch_05.jpg/960px-Reel_and_Brand_-_September_2021_-_Sarah_Stierch_05.jpg',
+    searchUrl: search('Steak Frites'),
+    source: 'wikipedia',
+  },
+  'Duck Confit': {
+    name: 'Duck Confit',
+    description: 'Duck confit is a French dish made with whole duck.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Confitdecanard.jpg/960px-Confitdecanard.jpg',
+    searchUrl: search('Duck Confit'),
+    source: 'wikipedia',
+  },
+  'Coq au Vin': {
+    name: 'Coq au Vin',
+    description: 'Coq au vin is a French dish of chicken braised with wine, lardons, mushrooms, and optionally garlic.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Gourmet_coq_au_vin.jpg/960px-Gourmet_coq_au_vin.jpg',
+    searchUrl: search('Coq au Vin'),
+    source: 'wikipedia',
+  },
+  'Sole Meunière': {
+    name: 'Sole Meunière',
+    description: 'Sole meunière is a classic French fish dish consisting of sole – floured and fried – and served with hot melted butter, lemon juice, and parsley.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Sole_meuniere_%284689490702%29.jpg/960px-Sole_meuniere_%284689490702%29.jpg',
+    searchUrl: search('Sole Meunière'),
+    source: 'wikipedia',
+  },
+  'Ratatouille': {
+    name: 'Ratatouille',
+    description: 'Ratatouille is a traditional French vegetable dish originating in the Provence region of southern France, particularly associated with Nice and its surrounding region.',
+    photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/37/Ratatouille_home_cooked.jpg',
+    searchUrl: search('Ratatouille'),
+    source: 'wikipedia',
+  },
+  'Cassoulet': {
+    name: 'Cassoulet',
+    description: 'Cassoulet is a rich stew originating in southern France.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Bowl_of_cassoulet.JPG/960px-Bowl_of_cassoulet.JPG',
+    searchUrl: search('Cassoulet'),
+    source: 'wikipedia',
+  },
+  'Steak Tartare': {
+    name: 'Steak Tartare',
+    description: 'Steak tartare, or tartar steak, is a French dish of raw ground (minced) beef.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Classic_steak_tartare.jpg/960px-Classic_steak_tartare.jpg',
+    searchUrl: search('Steak Tartare'),
+    source: 'wikipedia',
+  },
+  'Tarte Tatin': {
+    name: 'Tarte Tatin',
+    description: 'The tarte Tatin is a tart in which the fruit is caramelized in butter and sugar before the tart is baked.',
+    photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Franse_tarte_tatin.jpg/960px-Franse_tarte_tatin.jpg',
+    searchUrl: search('Tarte Tatin'),
     source: 'wikipedia',
   },
 };

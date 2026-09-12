@@ -47,3 +47,6 @@ next-env.d.ts
 # If we deploy, either commit this or move the disk layer to Vercel KV.
 /.cache/*
 !/.cache/.gitkeep
+
+# UI check screenshots. Regenerate with `node scripts/screenshot.mjs screenshots`.
+/screenshots/

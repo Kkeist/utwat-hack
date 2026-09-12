@@ -3,36 +3,204 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * Dark, serif, restaurant-menu register. Committed to a single look on purpose —
- * this is a menu, and menus are not theme-aware.
+ * A printed trattoria menu card lying on a kraft-paper table, in a room with
+ * deep green walls. Three materials, three tones:
+ *   room   — bottle green linen (side walls, awning stripe)
+ *   ground — kraft paper (the table)
+ *   cream  — the menu card stock itself
+ * Tomato red is spent in one place: the painted wordmark on the awning.
  */
 :root {
-  --background: #0f0d0b;
-  --surface: #17140f;
-  --border: #2c261d;
-  --foreground: #efe7d8;
-  --muted: #9d907b;
-  --accent: #c9a227;
+  --ground: #d5b98a;
+  --room: #2f4434;
+  --room-deep: #243528;
+  --cream: #f7eddb;
+  --cream-deep: #eddfc4;
+  --paper-white: #fdf8ec;
+  --ink: #2a1b10;
+  --ink-soft: #6e5a44;
+  --tomato: #bf3220;
+  --gold: #a8823f;
+  --gold-soft: #cdb17a;
+  --stripe-width: 56px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --font-serif: var(--font-menu-serif);
-  --font-sans: var(--font-menu-sans);
+  --color-ground: var(--ground);
+  --color-room: var(--room);
+  --color-room-deep: var(--room-deep);
+  --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
+  --color-paper-white: var(--paper-white);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-tomato: var(--tomato);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --font-serif: var(--font-serif-var);
+  --font-script: var(--font-script-var);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-menu-serif), Georgia, "Times New Roman", serif;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-serif-var), Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.5;
 }
 
-/* Shimmer for the enrichment skeletons. Nothing blocks on a lookup. */
+:focus-visible {
+  outline: 2px solid var(--room);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --stripe-width: 40px;
+  }
+}
+
+/*
+ * Paper fibre: tiled feTurbulence noise at low alpha. A flat warm fill reads
+ * as a dirty colour block; the same fill with visible grain reads as paper.
+ * Does not set `position` — every caller already has one.
+ */
+.paper-grain {
+  isolation: isolate;
+}
+.paper-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* Card stock: same fibre, much fainter, multiplied so it never greys the cream. */
+.stock-grain::before {
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
+
+/* Woven linen for the green walls: two hairline weaves over the base colour. */
+.linen {
+  background-color: var(--room);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 3px);
+}
+
+/* Awning canvas: wide, equal green and cream stripes. */
+.awning-stripes {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--room) 0,
+    var(--room) var(--stripe-width),
+    var(--cream) var(--stripe-width),
+    var(--cream) calc(var(--stripe-width) * 2)
+  );
+}
+
+/*
+ * The painted wordmark. Tomato script with a thick cream halo so it stays
+ * legible whether a letter lands on a green stripe or a cream one. The halo
+ * is a second copy of the text drawn behind with text-stroke — layering two
+ * copies works everywhere, unlike `paint-order` on HTML text.
+ */
+.wordmark {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-script-var), cursive;
+  color: var(--tomato);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  filter: drop-shadow(0 0.05em 0 rgba(42, 27, 16, 0.28));
+}
+.wordmark::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: var(--cream);
+  -webkit-text-stroke: 0.16em var(--cream);
+}
+
+/*
+ * The menu card: cream stock with a printed double rule — a thin outer line,
+ * a cream gap, a thin inner line — drawn with inset shadows so it never
+ * affects layout, plus a soft lift off the table.
+ */
+.menu-card {
+  background: var(--cream);
+  border: 1.5px solid var(--gold);
+  box-shadow:
+    inset 0 0 0 5px var(--cream),
+    inset 0 0 0 6px var(--gold),
+    0 18px 32px -20px rgba(42, 27, 16, 0.6);
+}
+
+/* Dotted price leader between a dish name and its price. */
+.leader {
+  flex: 1 1 auto;
+  min-width: 1.5rem;
+  border-bottom: 2px dotted var(--gold-soft);
+  transform: translateY(-0.35em);
+}
+
+/*
+ * Text fields: near-white paper, a single gold hairline, green when focused.
+ * The focus ring replaces the outline so there is never a red or blue box.
+ */
+.field {
+  background: var(--paper-white);
+  border: 1.5px solid var(--gold);
+  border-radius: 0;
+  color: var(--ink);
+}
+.field::placeholder {
+  color: var(--ink-soft);
+}
+.field:focus-visible {
+  outline: none;
+  border-color: var(--room);
+  box-shadow: 0 0 0 3px rgba(47, 68, 52, 0.18);
+}
+/* A field inside a field: the outer box shows the focus, the inner input must not. */
+.bare:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+/* Ingredient tag. */
+.tag {
+  display: inline-block;
+  border: 1px solid var(--gold-soft);
+  background: var(--paper-white);
+  padding: 0.1rem 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Number input without the browser's spinner. */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* Shimmer for facts that have not landed yet. */
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
@@ -45,6 +213,9 @@ body {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(239, 231, 216, 0.06), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
   animation: shimmer 1.6s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmer::after { animation: none; }
 }

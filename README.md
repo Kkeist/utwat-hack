@@ -56,3 +56,10 @@ scripts/warm.ts     pre-warm the cache
 ## Who is doing what
 
 See [WORKPLAN.md](WORKPLAN.md) — four workstreams, no shared files.
+
+## New direction: Dishly
+
+The project is pivoting toward **Dishly**, a menu app that looks up what
+every dish actually is, on top of the existing pick ("Chef's suggestions")
+and Steel scraping tiers from this codebase. See
+[DISHLY_PLAN.md](DISHLY_PLAN.md) for the plan.

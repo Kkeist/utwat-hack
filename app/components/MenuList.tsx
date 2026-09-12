@@ -2,38 +2,88 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * Every dish on the menu, browsable and searchable. Clicking one asks /api/dish
- * for its facts (cache-first server-side, so a prefetched dish returns instantly).
- *
- * TODO(D): the search box, grouping by category, and keyboard navigation.
+ * The dishes, one course per section, in either view:
+ *   full    — one DishCard per row, everything visible
+ *   compact — a grid of DishTiles; a tile opens the dish in the dialog
+ * Receives the already-filtered list, so an empty list means no match.
  */
 import type { Dish, DishFacts } from '@/lib/types';
+import { copy } from '../copy';
+import { SectionTitle } from './Card';
+import { DishCard, DishTile } from './DishDetail';
+
+export type MenuView = 'full' | 'compact';
+
+function groupByCategory(dishes: Dish[]): Array<{ category: string; dishes: Dish[] }> {
+  const groups: Array<{ category: string; dishes: Dish[] }> = [];
+  for (const dish of dishes) {
+    const category = dish.category ?? '';
+    const last = groups[groups.length - 1];
+    if (last && last.category === category) last.dishes.push(dish);
+    else groups.push({ category, dishes: [dish] });
+  }
+  return groups;
+}
+
+export function DishGrid({
+  dishes,
+  facts,
+  view,
+  onOpen,
+}: {
+  dishes: Dish[];
+  facts: Record<string, DishFacts>;
+  view: MenuView;
+  onOpen: (dish: Dish) => void;
+}) {
+  if (view === 'compact') {
+    return (
+      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {dishes.map((dish) => (
+          <li key={dish.name}>
+            <DishTile dish={dish} facts={facts[dish.name]} onOpen={onOpen} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  return (
+    <ul className="grid gap-4">
+      {dishes.map((dish) => (
+        <li key={dish.name}>
+          <DishCard dish={dish} facts={facts[dish.name]} />
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function MenuList({
   dishes,
   facts,
-  onSelect,
+  view,
+  onOpen,
 }: {
   dishes: Dish[];
   facts: Record<string, DishFacts>;
-  onSelect: (dish: Dish) => void;
+  view: MenuView;
+  onOpen: (dish: Dish) => void;
 }) {
+  if (!dishes.length) {
+    return <p className="text-center italic text-ink-soft">{copy.noMatches}</p>;
+  }
   return (
-    <ul className="divide-y divide-border">
-      {dishes.map((dish) => (
-        <li key={`${dish.category}-${dish.name}`}>
-          <button
-            onClick={() => onSelect(dish)}
-            className="flex w-full items-baseline justify-between gap-4 py-2 text-left hover:text-accent"
-          >
-            <span>
-              {dish.name}
-              {facts[dish.name] && <span className="ml-2 text-xs text-muted">·</span>}
-            </span>
-            <span className="text-muted">{dish.price}</span>
-          </button>
-        </li>
+    <div className="grid gap-9">
+      {groupByCategory(dishes).map((group, gi) => (
+        <section key={`${group.category}-${gi}`}>
+          {group.category && (
+            <div className="mb-5">
+              <SectionTitle as="h3">{group.category}</SectionTitle>
+            </div>
+          )}
+          <DishGrid dishes={group.dishes} facts={facts} view={view} onOpen={onOpen} />
+        </section>
       ))}
-    </ul>
+    </div>
   );
 }

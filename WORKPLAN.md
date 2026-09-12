@@ -130,3 +130,16 @@ early, they go to B.
 
 Merge whenever green. Nobody waits for a big-bang integration — the skeleton already
 integrates.
+
+---
+
+## Note: pivoting to Dishly
+
+This workplan describes the "Menu Roulette" direction. The project is now
+pivoting toward **Dishly**, an informational menu app — see
+[DISHLY_PLAN.md](DISHLY_PLAN.md). The Steel scraping tier (workstream A)
+carries over. Workstream C's picking logic (`lib/roulette.ts`) carries over
+too — it powers Dishly's "Chef's suggestions" — merged from upstream's
+`workstream-c` on 2026-09-12. Its judge-style justification text is
+generated and returned by the API but intentionally not shown on the page
+(owner's round-2 call, see DISHLY_PLAN.md).
