@@ -13,6 +13,7 @@
 import type { Dish, DishFacts } from '@/lib/types';
 import { isMocked } from '@/lib/steel';
 import { cacheGet, cacheSet } from '@/lib/cache';
+import { SAMPLE_FACTS } from '@/lib/fixtures';
 
 export function googleSearchUrl(name: string): string {
   return `https://www.google.com/search?q=${encodeURIComponent(`${name} dish`)}`;
@@ -23,7 +24,7 @@ export async function lookupDish(dish: Dish): Promise<DishFacts> {
   const hit = await cacheGet(dish.name);
   if (hit) return hit;
 
-  const facts = isMocked() ? fallbackFacts(dish) : await fetchFromWikipedia(dish);
+  const facts = isMocked() ? SAMPLE_FACTS[dish.name] ?? fallbackFacts(dish) : await fetchFromWikipedia(dish);
   await cacheSet(dish.name, facts);
   return facts;
 }

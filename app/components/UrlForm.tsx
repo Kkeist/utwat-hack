@@ -30,39 +30,18 @@ export function UrlForm({
         className="w-full rounded-none border-[3px] border-ink bg-surface px-5 py-1.5 text-xl text-foreground outline-none placeholder:text-muted focus:border-accent"
       />
 
-      <div className="flex items-center gap-3 text-xl text-foreground">
-        <span id="party-size-label">Party size</span>
-        <div className="flex items-stretch border-[3px] border-ink">
-          <button
-            type="button"
-            aria-label="Decrease party size"
-            disabled={partySize <= 1}
-            onClick={() => setPartySize((p) => clamp(p - 1))}
-            className="flex h-11 w-11 items-center justify-center text-2xl font-bold disabled:opacity-30"
-          >
-            −
-          </button>
-          <span
-            role="spinbutton"
-            aria-labelledby="party-size-label"
-            aria-valuemin={1}
-            aria-valuemax={12}
-            aria-valuenow={partySize}
-            className="flex h-11 w-11 items-center justify-center border-x-[3px] border-ink text-2xl font-bold"
-          >
-            {partySize}
-          </span>
-          <button
-            type="button"
-            aria-label="Increase party size"
-            disabled={partySize >= 12}
-            onClick={() => setPartySize((p) => clamp(p + 1))}
-            className="flex h-11 w-11 items-center justify-center text-2xl font-bold disabled:opacity-30"
-          >
-            +
-          </button>
-        </div>
-      </div>
+      <label className="flex items-baseline gap-3 text-xl text-foreground">
+        Party size
+        <input
+          type="number"
+          min={1}
+          max={12}
+          value={partySize}
+          onChange={(e) => setPartySize(clamp(Number(e.target.value) || 1))}
+          aria-label="Party size"
+          className="h-12 w-16 border-2 border-ink bg-surface text-center text-3xl font-bold text-foreground outline-none focus:border-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+      </label>
 
       <button
         type="submit"
