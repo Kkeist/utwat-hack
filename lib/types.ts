@@ -69,6 +69,8 @@ export interface DishFacts {
 export const MenuRequestSchema = z.object({
   url: z.string().url(),
   partySize: z.number().int().min(1).max(12),
+  /** Optional. Pin a spin so a demo replays exactly; omitted means a fresh table. */
+  seed: z.number().int().optional(),
 });
 export type MenuRequest = z.infer<typeof MenuRequestSchema>;
 
@@ -76,6 +78,8 @@ export type MenuRequest = z.infer<typeof MenuRequestSchema>;
 export interface MenuResponse {
   url: string;
   source: ScrapeSource;
+  /** The seed this spin actually used. Send it back as `seed` to replay the table. */
+  seed: number;
   sessionViewerUrl?: string;
   dishes: Dish[];
   picks: Pick[];
