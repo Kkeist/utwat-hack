@@ -21,11 +21,19 @@
  * It is never in the path of a spin.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import type { Pick } from '@/lib/types';
+import type { Pick, ReviewSignals } from '@/lib/types';
 import { CLOSERS, OPENERS } from '@/lib/justify';
 
-/** A slow API must never hold a request open. Below any sane UI patience. */
-const TIMEOUT_MS = 8_000;
+/**
+ * Hard ceiling on this call, and it really is hard: the SDK retries twice by
+ * default, so a naive `timeout` is silently tripled. maxRetries is pinned to 0
+ * below so the wall-clock worst case equals this number, and it sits under the
+ * route's maxDuration of 30s.
+ *
+ * 8s was too short and failed every call: Opus 5 runs adaptive thinking by
+ * default, and six justifications take longer than that to think and write.
+ */
+const TIMEOUT_MS = 25_000;
 
 /** Keyed on dish + course + party size, matching justify()'s own seed. */
 const cache = new Map<string, string>();
@@ -38,7 +46,13 @@ Rules:
 - No jokes, no exclamation marks, no emoji, no second person plural enthusiasm.
 - Past tense and passive constructions are your friends. "The matter has been settled."
 - 4 to 6 sentences. Reference the dish's own menu description and price where given.
-- Where review data is supplied, cite it as corroboration or as overruled objection.
+- Cite review data ONLY when it is supplied for that dish. A dish given no review
+  data has none: say nothing about prior diners, remarks, or precedent for it.
+  Never invent a review, a complaint, or a count. Fabricated evidence is the one
+  thing that breaks this voice, because the voice claims to be citing a record.
+- Where mentions and score ARE given: a positive score is corroboration, a negative
+  score is objection that has been considered and overruled, and zero is a divided
+  record that has nonetheless been resolved.
 - Every dish at the table must read differently from the others.
 
 The correct voice, for calibration:
@@ -52,6 +66,7 @@ ${CLOSERS.slice(0, 5).map((s) => `  ${s}`).join('\n')}`;
 export async function upgradeJustifications(
   picks: Pick[],
   partySize: number,
+  signals: ReviewSignals = {},
 ): Promise<Record<string, string>> {
   if (!picks.length) return {};
 
@@ -67,7 +82,7 @@ export async function upgradeJustifications(
   if (!process.env.ANTHROPIC_API_KEY) return out;
 
   try {
-    const client = new Anthropic();
+    const client = new Anthropic({ maxRetries: 0 });
     const response = await client.messages.create(
       {
         model: 'claude-opus-5',
@@ -107,6 +122,11 @@ export async function upgradeJustifications(
                 menuDescription: p.dish.description,
                 shared: p.shared,
                 seat: p.seat,
+                // Omitted entirely when absent, so the model cannot mistake a
+                // zero for "nobody liked it" or invent a record that is not there.
+                reviews: signals[p.dish.name]
+                  ? { mentions: signals[p.dish.name].mentions, score: Number(signals[p.dish.name].score.toFixed(1)) }
+                  : undefined,
               })),
               null,
               2,

@@ -33,6 +33,7 @@ const BodySchema = z.object({
     .min(1)
     .max(20),
   partySize: z.number().int().min(1).max(12),
+  signals: z.record(z.string(), z.object({ mentions: z.number(), score: z.number() })).optional(),
 });
 
 export async function POST(req: Request) {
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
   const justifications = await upgradeJustifications(
     body.data.picks as Pick[],
     body.data.partySize,
+    body.data.signals ?? {},
   );
   return NextResponse.json({ justifications });
 }

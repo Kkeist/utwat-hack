@@ -102,6 +102,8 @@ export interface MenuResponse {
   sessionViewerUrl?: string;
   dishes: Dish[];
   picks: Pick[];
+  /** The review scores this spin used. Echoed so the client can pass them to /api/justify. */
+  signals: ReviewSignals;
   /** Facts for picked dishes only, keyed by dish name. */
   facts: Record<string, DishFacts>;
 }

@@ -26,7 +26,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { buildDishSignals, type DishSignal } from '@/lib/review-signals';
 
-const TIMEOUT_MS = 20_000;
+/**
+ * Runs at warm/scrape time, not in a request, so it can afford to wait. One
+ * retry is worth having here because a warm run that falls back to the lexicon
+ * poisons the cache for the whole demo. maxRetries is pinned so the worst case
+ * is a knowable 2 x TIMEOUT_MS rather than the SDK default's 3x.
+ */
+const TIMEOUT_MS = 45_000;
 
 const SYSTEM = `You score restaurant dishes from customer reviews.
 
@@ -51,7 +57,7 @@ export async function buildDishSignalsWithClaude(
   if (!process.env.ANTHROPIC_API_KEY) return lexicon();
 
   try {
-    const client = new Anthropic();
+    const client = new Anthropic({ maxRetries: 1 });
     const response = await client.messages.create(
       {
         model: 'claude-opus-5',

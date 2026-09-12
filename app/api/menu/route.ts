@@ -80,6 +80,7 @@ export async function POST(req: Request) {
       sessionViewerUrl: scraped.sessionViewerUrl,
       dishes,
       picks,
+      signals,
       facts,
     });
   } catch (err) {
