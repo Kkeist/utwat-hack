@@ -11,6 +11,9 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 - `node scripts/screenshot.mjs screenshots` — phone / tablet / desktop
   screenshots of the entry page, both result views, the dish dialog, a
   search, and a mid-scroll viewport. Needs the dev server running.
+- `node scripts/check-alignment.mjs` — measures (not eyeballs) menu-card
+  padding/left edge and shared control heights against each group's own
+  mode; fails if anything is off. Needs the dev server running.
 - `npm run typecheck`, `npm run lint`.
 
 ## Layout
@@ -44,8 +47,9 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 - `IngredientFilter` — collapsed Include / Exclude filter: chips inside the
   box, type-to-narrow, click-to-pick list.
 - `Modal` — centred dialog, pinned Close, locks background scroll, Escape closes.
-- `MenuView` — the result page: fetch, batch prefetch, search filter,
-  view choice (remembered in localStorage), dialog state.
+- `MenuView` — the result page: fetch, batch prefetch, search filter
+  (debounced 200ms; shows a note while facts are still arriving), view
+  choice (remembered in localStorage), dialog state.
 - `MenuList` / `DishGrid` — grouped by course, in either view.
 - `Header` — the awning; `Hero` + `UrlForm` — entry form;
   `Provenance` — colophon line.

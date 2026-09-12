@@ -93,6 +93,32 @@ one flow.
 - [x] `/api/justify`'s Claude upgrade is now called after every menu load,
       silently replacing the templated verdict when it lands
 
+Round 5, 2026-09-12 — UI/architecture cleanup, prompted by a code review of
+workstream D's own work.
+
+- [x] Search and the ingredient filter could show stale or missing matches
+      while dish facts are still arriving in the background (a dish's
+      ingredients/description are not searchable until their batch lands).
+      Fixed: a note appears under "The menu" heading while facts are still
+      loading and the user has an active search or filter, so the gap is
+      explained instead of looking like a bug. Confirmed with a throttled
+      network in Playwright: hidden immediately after typing, shown once
+      the 200ms debounce commits while a batch is still in flight, gone
+      once the batch lands.
+- [x] `DishTile`/`DishCard` wrapped in `React.memo` — a batch of facts
+      landing was re-rendering every dish tile on screen, not just the
+      ones whose facts had just arrived, because `facts` is a new object
+      on every batch. `dish` and already-loaded `facts[name]` keep the
+      same object reference across batches (`cacheGet`/the merge in
+      `MenuView.enrich` never touch settled entries), so `memo`'s shallow
+      compare correctly skips the ones that did not change.
+- [x] Search input debounced 200ms: filtering now runs 200ms after typing
+      stops rather than on every keystroke. Invisible at 23 dishes; matters
+      once a real scraped menu is larger.
+- [x] `scripts/check-alignment.mjs` added: measures menu-card padding/left
+      edge and shared control heights with `getBoundingClientRect()`
+      instead of eyeballing screenshots. Passing on the current build.
+
 ## Tech stack
 
 - Web-agent scraping step uses [Steel.dev](https://steel.dev) (cloud
