@@ -20,6 +20,8 @@ import { menuLooksReal, parseMenu } from '@/lib/parse-menu';
 import { hashSeed, seededRng, spin } from '@/lib/roulette';
 import { justify } from '@/lib/justify';
 import { lookupDishes } from '@/lib/dish-lookup';
+import { isMocked } from '@/lib/steel';
+import { SAMPLE_DISHES } from '@/lib/fixtures';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -36,7 +38,9 @@ export async function POST(req: Request) {
 
   try {
     const scraped = await scrapeMenu(url);
-    const dishes = parseMenu(scraped.markdown);
+    // Mocked runs use the hand-written expected parse (categories and
+    // descriptions included) so the UI can be built against the full shape.
+    const dishes = isMocked() ? SAMPLE_DISHES : parseMenu(scraped.markdown);
 
     if (!menuLooksReal(dishes)) {
       // Honest error beats a convincing-looking wrong answer. (Design doc §8.)

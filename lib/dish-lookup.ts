@@ -19,12 +19,18 @@ export function googleSearchUrl(name: string): string {
   return `https://www.google.com/search?q=${encodeURIComponent(`${name} dish`)}`;
 }
 
-/** Cache-first single lookup. */
+/**
+ * Cache-first single lookup. Mocked runs skip the cache entirely: the canned
+ * facts are instant already, and caching them would keep serving a stale
+ * copy after the fixture changes.
+ */
 export async function lookupDish(dish: Dish): Promise<DishFacts> {
+  if (isMocked()) return SAMPLE_FACTS[dish.name] ?? fallbackFacts(dish);
+
   const hit = await cacheGet(dish.name);
   if (hit) return hit;
 
-  const facts = isMocked() ? SAMPLE_FACTS[dish.name] ?? fallbackFacts(dish) : await fetchFromWikipedia(dish);
+  const facts = await fetchFromWikipedia(dish);
   await cacheSet(dish.name, facts);
   return facts;
 }
