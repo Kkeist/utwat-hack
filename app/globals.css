@@ -17,6 +17,7 @@
   --accent-2: #ad3a2a;
   --ink: #1c140d;
   --side-panel: #caa06c;
+  --stripe: #f6c34a;
 }
 
 @theme inline {
@@ -33,7 +34,6 @@
   --font-serif: var(--font-menu-serif);
   --font-sans: var(--font-menu-sans);
   --font-logo: var(--font-menu-logo);
-  --font-hand: var(--font-menu-hand);
 }
 
 body {
@@ -81,18 +81,16 @@ body {
 }
 
 /*
- * Pleated awning fabric — bold fold lines behind the header content, in a
- * solid warm tan (not a gray/black tint, which reads as dirt on this
- * palette). One layer, one weight — a second layered gradient at a
- * different period was tried and looked like static, not fabric.
+ * Awning fabric — wide, equal-width yellow/white stripes (the classic
+ * storefront-canopy pattern), not thin fold lines.
  */
 .awning-pleats {
   background-image: repeating-linear-gradient(
     90deg,
-    var(--border) 0,
-    var(--border) 6px,
-    transparent 6px,
-    transparent 48px
+    var(--stripe) 0,
+    var(--stripe) 48px,
+    var(--awning) 48px,
+    var(--awning) 96px
   );
 }
 

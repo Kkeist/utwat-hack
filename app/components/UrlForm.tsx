@@ -1,7 +1,6 @@
 'use client';
 /** OWNER: Workstream D (UI) — the entry point. URL + party size. */
 import { useState } from 'react';
-import Image from 'next/image';
 
 export function UrlForm({
   onSubmit,
@@ -15,7 +14,7 @@ export function UrlForm({
 
   return (
     <form
-      className="font-hand flex flex-col items-center gap-6"
+      className="font-sans flex flex-col items-center gap-6"
       onSubmit={(e) => {
         e.preventDefault();
         if (url.trim()) onSubmit(url.trim(), partySize);
@@ -31,7 +30,7 @@ export function UrlForm({
 
       <label className="flex items-center gap-3 text-xl text-foreground">
         Party size
-        <span className="relative flex h-11 w-11 items-center justify-center border-[3px] border-ink bg-surface">
+        <span className="relative flex h-14 w-14 shrink-0 items-center justify-center border-[3px] border-ink bg-surface">
           <input
             type="number"
             min={1}
@@ -41,7 +40,10 @@ export function UrlForm({
             aria-label="Party size"
             className="no-spinner absolute inset-0 h-full w-full cursor-pointer bg-transparent text-center text-transparent caret-ink outline-none"
           />
-          <span aria-hidden className="pointer-events-none text-5xl leading-none font-bold text-foreground">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 flex items-center justify-center text-6xl font-bold text-foreground"
+          >
             {partySize}
           </span>
         </span>
@@ -53,7 +55,8 @@ export function UrlForm({
         className="flex flex-col items-center gap-2 disabled:opacity-40"
       >
         <span className="flex h-32 w-32 items-center justify-center rounded-full border-[3px] border-ink bg-surface p-3 sm:h-36 sm:w-36">
-          <Image src="/icons/plate-mark.png" alt="" width={128} height={128} className="h-full w-full object-contain" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/plate-mark.png" alt="" className="h-full w-full object-contain" />
         </span>
         <span className="font-logo text-2xl text-ink uppercase">{busy ? 'Searching…' : 'Search'}</span>
       </button>
