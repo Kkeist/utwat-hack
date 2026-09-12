@@ -23,8 +23,8 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 | `app/globals.css` | All colour tokens, textures, wordmark, menu-card frame, leaders |
 | `app/copy.ts` | Every UI string |
 | `app/components/` | UI components (below) |
-| `app/api/menu`, `app/api/dish` | API routes (workstream C) |
-| `lib/` | Scraping, parsing, lookup, cache, roulette (workstreams A–C) |
+| `app/api/menu`, `app/api/dish`, `app/api/justify` | API routes (workstream C) |
+| `lib/` | Scraping, parsing, lookup, cache, roulette, justify, review-signals (workstreams A–C) |
 | `lib/fixtures/` | Sample menu markdown, expected parse, canned dish facts |
 | `public/icons/` | fork.png, knife.png, plate-mark.png (hand-drawn art), app-icon.png (icon source) |
 | `public/*.png`, `site.webmanifest`, `browserconfig.xml` | Generated icon set, see `tools/build-icons.py` |
@@ -70,5 +70,10 @@ two views are client-side over the loaded list.
 ## Open
 
 - Real scrape path (`lib/scrape-menu.ts`) is still a stub.
-- Judge-style pick copy is returned by the API but not shown.
+- Judge-style pick copy is returned by the API but not shown (owner's
+  round-2 call). `POST /api/justify` can upgrade it via Claude but nothing
+  on the client calls that route.
+- Review signals (`lib/review-signals.ts`) score real review text when
+  workstream B's scrape lands; mocked runs use `lib/fixtures/sample-signals.ts`.
+  Nothing calls `lib/review-signals-llm.ts`'s Claude-backed scorer yet.
 - 5 sample dishes still without Wikipedia facts (rate limit on 2026-09-12).
