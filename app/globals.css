@@ -3,21 +3,22 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * Warm, awning-striped, hand-drawn register — the Dishly identity. Committed to
- * a single look on purpose; not theme-aware.
+ * Neutral off-white base, color pulled from the plate illustrations
+ * themselves (egg yolk yellow, ketchup red) rather than a large tinted
+ * background — the previous tan/cream backgrounds read as dirty.
  */
 :root {
-  --background: #f7ecd8;
-  --awning: #fffbf2;
-  --surface: #fffdf8;
-  --border: #d7b487;
-  --foreground: #3a2a1a;
-  --muted: #9c8563;
-  --accent: #e8892e;
-  --accent-2: #ad3a2a;
-  --ink: #1c140d;
-  --side-panel: #caa06c;
-  --stripe: #f6c34a;
+  --background: #f4f2ec;
+  --awning: #ffffff;
+  --surface: #ffffff;
+  --border: #dcd8ce;
+  --foreground: #262521;
+  --muted: #85817a;
+  --accent: #f2a922;
+  --accent-2: #d94a3d;
+  --ink: #262521;
+  --side-panel: #ded9cc;
+  --stripe: #f7c948;
 }
 
 @theme inline {
@@ -33,7 +34,6 @@
   --color-side-panel: var(--side-panel);
   --font-serif: var(--font-menu-serif);
   --font-sans: var(--font-menu-sans);
-  --font-logo: var(--font-menu-logo);
 }
 
 body {
@@ -94,12 +94,3 @@ body {
   );
 }
 
-/* Party-size box reads as a plain number, not a browser spinner. */
-.no-spinner::-webkit-inner-spin-button,
-.no-spinner::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.no-spinner {
-  -moz-appearance: textfield;
-}

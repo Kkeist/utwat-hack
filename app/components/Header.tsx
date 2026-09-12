@@ -46,7 +46,7 @@ export function Header() {
         <div className="mx-auto flex max-w-3xl items-center justify-center gap-4 px-6 pt-8 pb-4 sm:gap-8 sm:pt-10 sm:pb-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/fork.png" alt="" className="h-14 w-14 shrink-0 sm:h-20 sm:w-20" />
-          <h1 className="font-logo text-4xl text-accent sm:text-6xl">DISHLY</h1>
+          <h1 className="font-sans text-4xl font-black tracking-tight text-accent sm:text-6xl">DISHLY</h1>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/knife.png" alt="" className="h-14 w-14 shrink-0 sm:h-20 sm:w-20" />
         </div>

@@ -15,7 +15,7 @@ export function Hero({
 }) {
   return (
     <section className="mx-auto w-full max-w-xl px-6 pt-0 text-center">
-      <span className="font-logo inline-block rounded-full bg-ink px-8 py-2 text-2xl tracking-widest text-accent uppercase">
+      <span className="font-sans inline-block rounded-full bg-ink px-8 py-2 text-2xl font-extrabold tracking-widest text-accent uppercase">
         Restaurant
       </span>
 
