@@ -8,7 +8,7 @@
  * on the restaurant homepage.
  */
 import { chromium, type Page } from 'playwright-core';
-import { SESSION_TIMEOUT_MS, steel } from '@/lib/steel';
+import { SESSION_TIMEOUT_MS, steel, steelApiKey } from '@/lib/steel';
 import type { ScrapeSource } from '@/lib/types';
 
 export interface ReviewScrape {
@@ -337,8 +337,9 @@ function homepageQuotes(markdown: string): string {
 
 function cdpWebSocketUrl(websocketUrl: string): string {
   const u = new URL(websocketUrl);
-  if (!u.searchParams.get('apiKey') && process.env.STEEL_API_KEY) {
-    u.searchParams.set('apiKey', process.env.STEEL_API_KEY);
+  const key = steelApiKey();
+  if (!u.searchParams.get('apiKey') && key) {
+    u.searchParams.set('apiKey', key);
   }
   return u.toString();
 }
