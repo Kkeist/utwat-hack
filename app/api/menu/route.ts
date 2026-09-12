@@ -23,6 +23,7 @@ import { hashSeed, seededRng, spin } from '@/lib/roulette';
 import { justify } from '@/lib/justify';
 import { lookupDishes } from '@/lib/dish-lookup';
 import { isMocked } from '@/lib/steel';
+import { SAMPLE_DISHES } from '@/lib/fixtures';
 import { SAMPLE_SIGNALS } from '@/lib/fixtures/sample-signals';
 
 export const runtime = 'nodejs';
@@ -41,9 +42,13 @@ export async function POST(req: Request) {
   const { url, partySize, seed: pinnedSeed } = body.data;
 
   try {
+    // Detailed form: `trace` carries the candidate URLs and per-page scores that
+    // the diagnostics dump below writes to .cache for debugging a bad scrape.
     const trace = await scrapeMenuDetailed(url);
     const scraped = trace.result;
-    const dishes = parseMenu(scraped.markdown);
+    // Mocked runs use the hand-written expected parse (categories and
+    // descriptions included) so the UI can be built against the full shape.
+    const dishes = isMocked() ? SAMPLE_DISHES : parseMenu(scraped.markdown);
 
     try {
       const dir = join(process.cwd(), '.cache');
