@@ -12,7 +12,7 @@
  */
 import { chromium, type Page } from 'playwright-core';
 import type { MenuScrape } from '@/lib/types';
-import { isMocked, SESSION_TIMEOUT_MS, steel } from '@/lib/steel';
+import { isMocked, SESSION_TIMEOUT_MS, steel, steelApiKey } from '@/lib/steel';
 import { sampleMenuMarkdown } from '@/lib/fixtures';
 
 const MAX_MENU_FOLLOWS = 2;
@@ -43,6 +43,8 @@ const JUNK_LINK =
 /** $12, €9, 29 €, 26,50 EUR, or a dish line that ends in a bare 20 / 16. */
 const PRICE =
   /(?:[$£€]\s?\d|\d+(?:[.,]\d{2})?\s*€|\d+[.,]\d{2}\s*(?:eur|usd|gbp)\b|\b(?:eur|usd|gbp)\s*\d)/i;
+/** Balthazar-style: a price sitting on its own line, "8.00" or "19.00 / 29.00". */
+const BARE_PRICE_LINE = /^\d{1,3}(?:[.,]\d{2})(?:\s*\/\s*\d{1,3}(?:[.,]\d{2}))?\s*$/;
 const MD_LINK = /\[([^\]]*)\]\(([^)\s]+)\)/g;
 const RAW_URL = /https?:\/\/[^\s)\]>'"]+/gi;
 
@@ -86,6 +88,7 @@ function boldNameCount(text: string): number {
 function dishLinePriceCount(text: string): number {
   return text.split(/\n/).filter((line) => {
     const t = line.trim();
+    if (BARE_PRICE_LINE.test(t)) return true;
     if (t.length < 12 || t.length > 180) return false;
     if (!/[A-Za-zÀ-ÿ]{4,}/.test(t)) return false;
     return /(?:\s|[-–—])\d{1,3}(?:[.,]\d{2})?\s*$/.test(t);
@@ -113,8 +116,12 @@ export function scrapeLooksThin(markdown: string): boolean {
 export function scoreMenuMarkdown(markdown: string): number {
   const text = markdown.trim();
   if (!text) return 0;
+  const prices = priceCount(text);
+  const names = boldNameCount(text);
   const length = Math.min(text.length, 12_000) / 200;
-  return priceCount(text) * 8 + boldNameCount(text) * 2 + length;
+  // Nav/hub pages are long and must not beat a real menu that Steel returned thinner.
+  if (prices === 0) return names * 2;
+  return prices * 8 + names * 2 + length;
 }
 
 function hostKey(url: string): string | undefined {
@@ -469,7 +476,19 @@ export async function scrapeMenuDetailed(url: string): Promise<ScrapeTrace> {
     };
   }
 
-  const first = await scrapePage(url);
+  const firstAttempt = await scrapePage(url);
+  let first = firstAttempt;
+  try {
+    const path = decodePath(new URL(url).pathname);
+    if (scrapeLooksThin(first.markdown) && MENU_PATH.test(path) && !isPdfUrl(url)) {
+      const retry = await scrapePage(url, 2500);
+      if (scoreMenuMarkdown(retry.markdown) > scoreMenuMarkdown(first.markdown)) {
+        first = retry;
+      }
+    }
+  } catch {
+    // keep the first scrape
+  }
   const tried = [triedRow(first)];
   const seen = new Set<string>([normalizeUrl(first.url, first.url) ?? first.url]);
   const pages: ScrapedPage[] = [first];
@@ -523,9 +542,14 @@ export async function scrapeMenuDetailed(url: string): Promise<ScrapeTrace> {
   }
 
   if (scrapeLooksThin(bestMarkdown)) {
+    // If the user already handed us a /menu/breakfast-menu URL, play THAT page —
+    // do not wander to the first unrelated candidate (lunch, wine, …).
+    const leafMenu = MENU_PATH.test(decodePath(new URL(url).pathname));
     const target = looksLikeHome(url)
       ? url
-      : (candidates.find((c) => !isPdfUrl(c)) ?? (isPdfUrl(chosenUrl) ? undefined : chosenUrl));
+      : leafMenu
+        ? url
+        : (candidates.find((c) => !isPdfUrl(c)) ?? (isPdfUrl(chosenUrl) ? undefined : chosenUrl));
     if (target) {
       try {
         const pw = await scrapeMenuWithBrowser(target, url);
@@ -596,8 +620,9 @@ export async function scrapeMenu(url: string): Promise<MenuScrape> {
 
 function cdpWebSocketUrl(websocketUrl: string): string {
   const u = new URL(websocketUrl);
-  if (!u.searchParams.get('apiKey') && process.env.STEEL_API_KEY) {
-    u.searchParams.set('apiKey', process.env.STEEL_API_KEY);
+  const key = steelApiKey();
+  if (!u.searchParams.get('apiKey') && key) {
+    u.searchParams.set('apiKey', key);
   }
   return u.toString();
 }
@@ -656,7 +681,10 @@ async function loadAndRead(page: Page, url: string): Promise<string> {
   await expandMenuUi(page);
   await page
     .waitForFunction(
-      () => /(?:[$£€]\s?\d|\d+[.,]\d{2}\s*(?:€|EUR)|STARTER|MAIN COURSE)/i.test(document.body?.innerText ?? ''),
+      () =>
+        /(?:[$£€]\s?\d|\d+[.,]\d{2}\s*(?:€|EUR)|\b\d{1,3}\.\d{2}\b|STARTER|MAIN COURSE)/i.test(
+          document.body?.innerText ?? '',
+        ),
       { timeout: 20_000 },
     )
     .catch(() => undefined);
