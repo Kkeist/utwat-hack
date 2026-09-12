@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/**
+ * OWNER: Workstream D (UI)
+ *
+ * Dark, serif, restaurant-menu register. Committed to a single look on purpose —
+ * this is a menu, and menus are not theme-aware.
+ */
+:root {
+  --background: #0f0d0b;
+  --surface: #17140f;
+  --border: #2c261d;
+  --foreground: #efe7d8;
+  --muted: #9d907b;
+  --accent: #c9a227;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --font-serif: var(--font-menu-serif);
+  --font-sans: var(--font-menu-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-menu-serif), Georgia, "Times New Roman", serif;
+}
+
+/* Shimmer for the enrichment skeletons. Nothing blocks on a lookup. */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(239, 231, 216, 0.06), transparent);
+  animation: shimmer 1.6s infinite;
+}
