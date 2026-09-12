@@ -70,11 +70,19 @@ export function MenuView() {
   const [result, setResult] = useState<MenuResponse | null>(null);
   const [facts, setFacts] = useState<Record<string, DishFacts>>({});
   const [error, setError] = useState<string | null>(null);
+  const [enriching, setEnriching] = useState(false);
+  const [searchText, setSearchText] = useState('');
   const [query, setQuery] = useState('');
   const [ingredientMode, setIngredientMode] = useState<IngredientMode>('include');
   const [ingredients, setIngredients] = useState<string[]>([]);
   const view = useSyncExternalStore(subscribeView, readView, () => 'full' as View);
   const [openDish, setOpenDish] = useState<Dish | null>(null);
+
+  /** Filtering runs 200ms after typing stops, not on every keystroke. */
+  useEffect(() => {
+    const id = setTimeout(() => setQuery(searchText), 200);
+    return () => clearTimeout(id);
+  }, [searchText]);
 
   useEffect(() => {
     if (!url) return;
@@ -123,6 +131,7 @@ export function MenuView() {
       setError(null);
       setResult(null);
       setFacts({});
+      setEnriching(false);
       try {
         const res = await fetch('/api/menu', {
           method: 'POST',
@@ -137,9 +146,11 @@ export function MenuView() {
         setFacts(menu.facts);
         void upgradeVerdicts(menu);
         const cold = menu.dishes.filter((d) => !menu.facts[d.name]);
+        if (cold.length) setEnriching(true);
         for (let i = 0; i < cold.length; i += BATCH) {
           await enrich(cold.slice(i, i + BATCH));
         }
+        if (!cancelled) setEnriching(false);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : copy.genericError);
       }
@@ -210,7 +221,7 @@ export function MenuView() {
             <div className="flex flex-wrap items-center gap-3">
               <ButtonLink href="/">{copy.back}</ButtonLink>
               <div className="order-3 basis-full sm:order-2 sm:basis-auto sm:flex-1">
-                <SearchField value={query} onChange={setQuery} label={copy.searchDishes} />
+                <SearchField value={searchText} onChange={setSearchText} label={copy.searchDishes} />
               </div>
               <div className="order-2 ml-auto sm:order-3 sm:ml-0">
                 <ToggleGroup
@@ -270,6 +281,9 @@ export function MenuView() {
 
               <Card>
                 <SectionTitle>{copy.menuTitle}</SectionTitle>
+                {enriching && filtering && (
+                  <p className="mt-2 text-center text-base italic text-ink-soft">{copy.stillEnriching}</p>
+                )}
                 <div className="mt-8">
                   <MenuList dishes={matches} facts={facts} view={view} onOpen={setOpenDish} />
                 </div>

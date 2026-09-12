@@ -33,6 +33,7 @@ export const copy = {
   exclude: 'Exclude',
   ingredientPlaceholder: 'Type an ingredient',
   noIngredientsYet: 'Ingredients appear as dishes are looked up.',
+  stillEnriching: 'Dish details are still loading — a search or filter may miss a dish until it finishes.',
   remove: (name: string) => `Remove ${name}`,
   clear: 'Clear',
   dishesRead: (count: number, path: string) =>
