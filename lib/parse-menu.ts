@@ -27,7 +27,16 @@ const JUNK = [
   /\bcareers\b/i,
   /\breservations?\b/i,
   /\bgift cards?\b/i,
-  // TODO(B): extend. Anchor every token. `/fri/` would eat Steak Frites.
+  /\bopen\b.*\btill\b/i,
+  /\bbook a table\b/i,
+  /\bprivate dining\b/i,
+   /\bper person\b/i,
+   /\bmonday\b|\btuesday\b|\bwednesday\b|\bthursday\b|\bfriday\b|\bsaturday\b|\bsunday\b/i,
+/\bkitchen closes?\b/i,
+/\blast (?:seating|order)s?\b/i,
+/\bwalk-?ins? welcome\b/i,
+/\bcash only\b/i,
+/\b\d{1,2}(?:am|pm)\b.*\bto\b.*\d{1,2}(?:am|pm)\b/i,  // "5pm to 10pm" style hours
 ];
 
 export function isJunkLine(line: string): boolean {
@@ -41,33 +50,103 @@ export function parsePrice(raw: string | undefined): number | undefined {
   return m ? Number(m[1].replace(',', '.')) : undefined;
 }
 
-/**
- * PLACEHOLDER — handles only `**Name** $12` under `##` headings.
- * Workstream B replaces this wholesale. It exists so the rest of the app walks.
- */
+/** Strip inline markdown/modifier noise from a captured dish name. */
+function cleanName(name: string): string {
+  let n = name
+    .replace(/\(.*?\)/g, '')
+    .replace(/\*[^*]*\*/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  // strip marketing prefixes like "Our Famous", "Chef's", "House"
+  let prev;
+  do {
+    prev = n;
+    n = n.replace(/^(our|famous|classic|homemade|signature|chef'?s|house|world-famous)\s+/i, '');
+  } while (n !== prev);
+
+  return n.trim();
+}
+function tryAddDish(
+  dishes: Dish[],
+  rawName: string,
+  priceRaw: string | undefined,
+  category: string | undefined,
+): void {
+  const name = cleanName(rawName);
+  if (name.length < 2) return;
+
+  const parsed = DishSchema.safeParse({
+    name,
+    price: priceRaw,
+    priceValue: parsePrice(priceRaw),
+    category,
+  });
+  if (parsed.success) dishes.push(parsed.data);
+}
+
 export function parseMenu(markdown: string): Dish[] {
   const dishes: Dish[] = [];
   let category: string | undefined;
+  const lines = markdown.split('\n');
 
-  for (const line of markdown.split('\n')) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
     const heading = line.match(/^#{1,6}\s+(.*)$/);
     if (heading) {
       category = heading[1].trim();
       continue;
     }
+
     if (isJunkLine(line)) continue;
 
-    const m = line.match(/^\*\*(.+?)\*\*\s*(?:—|-)?\s*(\$?\d[\d.,]*)?/);
-    if (!m) continue;
+    // --- Markdown table ---
+    if (line.startsWith('|')) {
+      const nextLine = (lines[i + 1] ?? '').trim();
+      const isSeparator = /^\|(\s*:?-+:?\s*\|)+$/.test(nextLine);
 
-    const parsed = DishSchema.safeParse({
-      name: m[1].trim(),
-      price: m[2],
-      priceValue: parsePrice(m[2]),
-      category,
-    });
-    if (parsed.success) dishes.push(parsed.data);
+      if (isSeparator) {
+        const headerCells = line.split('|').map((c) => c.trim()).filter(Boolean);
+        const nameIdx = headerCells.findIndex((c) => /\b(dish|name|item)\b/i.test(c));
+        const priceIdx = headerCells.findIndex((c) => /\bprice\b/i.test(c));
+
+        let j = i + 2;
+        while (j < lines.length && lines[j].trim().startsWith('|')) {
+          const cells = lines[j]
+            .split('|')
+            .map((c) => c.trim())
+            .filter((c) => c.length > 0);
+
+          if (cells.length > 0) {
+            const rawName = cells[nameIdx >= 0 ? nameIdx : 0];
+            const priceRaw = cells[priceIdx >= 0 ? priceIdx : cells.length - 1];
+            tryAddDish(dishes, rawName, priceRaw, category);
+          }
+          j++;
+        }
+        i = j - 1;
+        continue;
+      }
+    }
+
+    // --- Bold name: **Name** $price ---
+    const bold = line.match(/^\*\*(.+?)\*\*\s*(?:—|-)?\s*(\$?\d[\d.,]*)?/);
+    if (bold) {
+      tryAddDish(dishes, bold[1], bold[2], category);
+      continue;
+    }
+
+    // --- Plain text: "Name (mods) *tag* $price" or "Name — desc — $price" ---
+    const priceMatch = line.match(/\$\d[\d.,]*/);
+    if (priceMatch || /—/.test(line)) {
+      let namePart = priceMatch ? line.slice(0, line.indexOf(priceMatch[0])) : line;
+      namePart = namePart.split('—')[0];
+      tryAddDish(dishes, namePart, priceMatch?.[0], category);
+    }
   }
+
   return dishes;
 }
 
@@ -76,7 +155,17 @@ export function parseMenu(markdown: string): Dish[] {
  * convincing-looking wrong answer.
  */
 export function menuLooksReal(dishes: Dish[]): boolean {
-  // TODO(B): tighten. Candidate signals: a floor on count, a majority having
-  // prices, more than one category, average name length in a sane band.
-  return dishes.length >= 5;
+  if (dishes.length < 5) return false;
+
+  const withPrice = dishes.filter((d) => d.priceValue !== undefined).length;
+  const categories = new Set(dishes.map((d) => d.category).filter(Boolean));
+  const avgNameLen =
+    dishes.reduce((sum, d) => sum + d.name.length, 0) / dishes.length;
+
+  return (
+    withPrice / dishes.length >= 0.5 &&
+    categories.size >= 1 &&
+    avgNameLen >= 4 &&
+    avgNameLen <= 60
+  );
 }
