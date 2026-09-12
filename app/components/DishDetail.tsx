@@ -12,6 +12,7 @@
  * Everything the menu already told us renders at once; the photo and tags
  * shimmer until the lookup lands.
  */
+import { memo } from 'react';
 import type { Dish, DishFacts } from '@/lib/types';
 import { copy } from '../copy';
 import { Skeleton } from './Skeleton';
@@ -101,15 +102,15 @@ export function DishDetail({
   );
 }
 
-export function DishCard({ dish, facts }: { dish: Dish; facts?: DishFacts }) {
+export const DishCard = memo(function DishCard({ dish, facts }: { dish: Dish; facts?: DishFacts }) {
   return (
     <article className="border border-gold-soft bg-paper-white/50 p-4">
       <DishDetail dish={dish} facts={facts} layout="row" />
     </article>
   );
-}
+});
 
-export function DishTile({
+export const DishTile = memo(function DishTile({
   dish,
   facts,
   onOpen,
@@ -130,4 +131,4 @@ export function DishTile({
       {dish.price && <span className="block text-base text-ink-soft tabular-nums">{dish.price}</span>}
     </button>
   );
-}
+});
