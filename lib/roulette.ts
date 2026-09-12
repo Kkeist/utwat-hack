@@ -36,17 +36,38 @@ export function hashSeed(s: string): number {
 }
 
 /**
- * Category first, name second. EVERY token here must be \b-anchored:
- * an unanchored `tea` files S-tea-k Frites as a beverage. (Design doc §8.)
+ * Ordered course rules. Applied to the menu's category heading first, then — only
+ * if the heading said nothing — to the dish name.
+ *
+ * EVERY token is \b-anchored, without exception. An unanchored `tea` files
+ * S-tea-k Frites as a beverage; an unanchored `fri` makes it vanish entirely.
+ * (Design doc §8.) Order matters: `drink` runs before `dessert` so an ice-cream
+ * float lands in the right bucket, and `dessert` before `main` so a chocolate
+ * tart is not read as a plate.
+ */
+const RULES: [Course, RegExp][] = [
+  ['drink', /\b(drinks?|beverages?|wines?|beers?|cocktails?|coffee|espresso|latte|cappuccino|tea|juice|soda|lemonade|cider|spirits?|aperitifs?|digestifs?)\b/],
+  ['dessert', /\b(desserts?|sweets?|puddings?|ice cream|sorbets?|gelato|tarts?|cakes?|br[ûu]l[ée]e|tiramisu|profiteroles?|affogato)\b/],
+  ['starter', /\b(starters?|appetizers?|apps|small plates?|antipasti|entradas|hors d'oeuvres?|salads?|soups?|oysters?|bruschetta|charcuterie)\b/],
+  ['main', /\b(mains?|entr[ée]es?|plates?|grill|pasta|risotto|pizza|from the sea|steaks?|burgers?|chicken|salmon|duck|pork|lamb|beef|curry|confit|cassoulet)\b/],
+];
+
+function match(haystack: string): Course | undefined {
+  for (const [course, re] of RULES) if (re.test(haystack)) return course;
+  return undefined;
+}
+
+/**
+ * Category first, name second — and the two are tested SEPARATELY. Testing them
+ * as one string lets a name token outrank the heading it sits under, which is how
+ * a Caesar Salad listed under Mains ends up filed as a starter.
  */
 export function classify(dish: Dish): Course {
-  const hay = `${dish.category ?? ''} ${dish.name}`.toLowerCase();
-  if (/\b(drinks?|wine|beer|cocktails?|coffee|tea|juice|soda)\b/.test(hay)) return 'drink';
-  if (/\b(desserts?|sweets?|pudding|ice cream)\b/.test(hay)) return 'dessert';
-  if (/\b(starters?|appetizers?|apps|small plates|antipasti|entradas)\b/.test(hay)) return 'starter';
-  if (/\b(mains?|entr[ée]es?|plates?|grill|pasta|from the sea)\b/.test(hay)) return 'main';
-  // TODO(C): name-level rules for menus with no useful headings.
-  return 'other';
+  return (
+    match((dish.category ?? '').toLowerCase()) ??
+    match(dish.name.toLowerCase()) ??
+    'other'
+  );
 }
 
 export function classifyAll(dishes: Dish[]): ClassifiedDish[] {
@@ -65,17 +86,61 @@ export function allocation(partySize: number): Record<Course, number> {
 }
 
 /**
- * PLACEHOLDER — picks mains only, allows duplicates, ignores the allocation.
- * Workstream C replaces this. `justification` is filled in by the caller so this
- * stays a pure allocation function.
+ * Which dishes are eligible for a course.
+ *
+ * Menus with no useful headings classify as `other` wholesale, so `other` is the
+ * first fallback everywhere. Beyond that the two courses differ on purpose:
+ * everybody must be fed, so a main falls back to anything edible; a starter or a
+ * dessert is simply skipped rather than filled with a steak.
  */
-export function spin(dishes: Dish[], partySize: number, rng: Rng = Math.random): Omit<Pick, 'justification'>[] {
-  const pool = classifyAll(dishes);
-  const mains = pool.filter((d) => d.course === 'main');
-  const source = mains.length ? mains : pool;
+function poolFor(pool: ClassifiedDish[], course: Course): ClassifiedDish[] {
+  const exact = pool.filter((d) => d.course === course);
+  if (exact.length) return exact;
 
-  return Array.from({ length: partySize }, (_, i) => {
-    const dish = source[Math.floor(rng() * source.length)];
-    return { dish, course: dish.course, seat: i + 1, shared: false };
-  });
+  const other = pool.filter((d) => d.course === 'other');
+  if (other.length) return other;
+
+  return course === 'main' ? pool.filter((d) => d.course !== 'drink') : [];
+}
+
+/** Draw n dishes without replacement, falling back to repeats only once the pool runs dry. */
+function draw(pool: ClassifiedDish[], n: number, rng: Rng, used: Set<string>): ClassifiedDish[] {
+  const out: ClassifiedDish[] = [];
+  let fresh = pool.filter((d) => !used.has(d.name));
+
+  for (let i = 0; i < n; i++) {
+    if (!fresh.length) fresh = [...pool]; // pool exhausted — repeats are now allowed
+    if (!fresh.length) break; // the course does not exist on this menu
+    const [dish] = fresh.splice(Math.floor(rng() * fresh.length), 1);
+    used.add(dish.name);
+    out.push(dish);
+  }
+  return out;
+}
+
+/**
+ * Allocate a table. Returns picks in meal order — starters, then mains by seat,
+ * then the dessert — so the UI can render them straight down the page.
+ *
+ * `justification` is filled in by the caller, which keeps this a pure function of
+ * (dishes, partySize, rng) and makes it trivial to test.
+ */
+export function spin(
+  dishes: Dish[],
+  partySize: number,
+  rng: Rng = Math.random,
+): Omit<Pick, 'justification'>[] {
+  const pool = classifyAll(dishes);
+  const want = allocation(partySize);
+  const used = new Set<string>();
+
+  const starters = draw(poolFor(pool, 'starter'), want.starter, rng, used);
+  const mains = draw(poolFor(pool, 'main'), want.main, rng, used);
+  const desserts = draw(poolFor(pool, 'dessert'), want.dessert, rng, used);
+
+  return [
+    ...starters.map((dish) => ({ dish, course: 'starter' as Course, shared: true })),
+    ...mains.map((dish, i) => ({ dish, course: 'main' as Course, seat: i + 1, shared: false })),
+    ...desserts.map((dish) => ({ dish, course: 'dessert' as Course, shared: true })),
+  ];
 }
