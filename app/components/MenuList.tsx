@@ -20,8 +20,8 @@ export function MenuList({
 }) {
   return (
     <ul className="divide-y divide-border">
-      {dishes.map((dish) => (
-        <li key={`${dish.category}-${dish.name}`}>
+      {dishes.map((dish, i) => (
+        <li key={`${i}-${dish.category ?? ''}-${dish.name}-${dish.price ?? ''}`}>
           <button
             onClick={() => onSelect(dish)}
             className="flex w-full items-baseline justify-between gap-4 py-2 text-left hover:text-accent"
