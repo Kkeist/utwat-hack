@@ -1,4 +1,4 @@
-# Menu Roulette
+# Dishly
 
 Point it at a restaurant. It reads the menu, decides what you are eating, and
 explains why the decision was never in doubt.

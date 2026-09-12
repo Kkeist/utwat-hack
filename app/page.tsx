@@ -72,7 +72,7 @@ export default function Home() {
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-      <h1 className="text-5xl">Menu Roulette</h1>
+      <h1 className="text-5xl">Dishly</h1>
       <p className="mt-2 text-muted">
         Point it at a restaurant. The decision has already been made.
       </p>

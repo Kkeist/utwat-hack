@@ -14,7 +14,7 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Menu Roulette',
+  title: 'Dishly',
   description: 'It reads the menu, decides what you are eating, and explains why the decision was never in doubt.',
 };
 

@@ -1,4 +1,4 @@
-# Menu Roulette — four-way split
+# Dishly — four-way split
 
 The skeleton walks today: `MOCK_STEEL=1` runs the whole app end to end against a
 fixture menu, with no Steel key and no network. Every workstream below replaces
