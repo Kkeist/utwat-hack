@@ -11,7 +11,8 @@
  */
 import { useState } from 'react';
 import type { Dish, DishFacts, MenuResponse } from '@/lib/types';
-import { UrlForm } from './components/UrlForm';
+import { Header } from './components/Header';
+import { Hero } from './components/Hero';
 import { PickCard } from './components/PickCard';
 import { MenuList } from './components/MenuList';
 import { Provenance } from './components/Provenance';
@@ -71,42 +72,43 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-      <h1 className="text-5xl">Menu Roulette</h1>
-      <p className="mt-2 text-muted">
-        Point it at a restaurant. The decision has already been made.
-      </p>
+    <>
+      <Header />
 
-      <div className="mt-8">
-        <UrlForm onSubmit={spin} busy={busy} />
-      </div>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 pb-12">
+        <Hero onSubmit={spin} busy={busy} />
 
-      {error && <p className="mt-6 text-sm text-accent">{error}</p>}
+        {error && <p className="mt-6 text-center text-sm text-accent-2">{error}</p>}
 
-      {result && (
-        <>
-          <section className="mt-10 grid gap-4">
-            {result.picks.map((pick, i) => (
-              <PickCard key={i} pick={pick} facts={facts[pick.dish.name]} />
-            ))}
-          </section>
+        {result && (
+          <>
+            <section className="mt-10 grid gap-4">
+              {result.picks.map((pick, i) => (
+                <PickCard key={i} pick={pick} facts={facts[pick.dish.name]} />
+              ))}
+            </section>
 
-          <section className="mt-12">
-            <h2 className="mb-3 text-xl">The full menu</h2>
-            <MenuList
-              dishes={result.dishes}
-              facts={facts}
-              onSelect={(dish) => void enrich([dish])}
+            <section className="mt-12">
+              <h2 className="mb-3 text-xl">The full menu</h2>
+              <MenuList
+                dishes={result.dishes}
+                facts={facts}
+                onSelect={(dish) => void enrich([dish])}
+              />
+            </section>
+
+            <Provenance
+              dishCount={result.dishes.length}
+              source={result.source}
+              sessionViewerUrl={result.sessionViewerUrl}
             />
-          </section>
+          </>
+        )}
+      </main>
 
-          <Provenance
-            dishCount={result.dishes.length}
-            source={result.source}
-            sessionViewerUrl={result.sessionViewerUrl}
-          />
-        </>
-      )}
-    </main>
+      <footer className="font-logo pb-6 text-center text-xs tracking-wide text-muted">
+        made by 404 Brain Not Found
+      </footer>
+    </>
   );
 }

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Placeholder pending the hand-drawn version. See ICONS_TODO.md. -->
+  <circle cx="100" cy="100" r="92" fill="#fdf8ee" stroke="#2a2018" stroke-width="3" />
+  <circle cx="100" cy="100" r="70" fill="none" stroke="#d8c39a" stroke-width="2" />
+  <path
+    d="M100 55c14 10 22 24 22 38s-10 26-22 26-22-12-22-26 8-28 22-38Z"
+    fill="none"
+    stroke="#b23a2c"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+</svg>

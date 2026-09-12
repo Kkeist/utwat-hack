@@ -3,27 +3,34 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * Dark, serif, restaurant-menu register. Committed to a single look on purpose —
- * this is a menu, and menus are not theme-aware.
+ * Warm, awning-striped, hand-drawn register — the Dishly identity. Committed to
+ * a single look on purpose; not theme-aware.
  */
 :root {
-  --background: #0f0d0b;
-  --surface: #17140f;
-  --border: #2c261d;
-  --foreground: #efe7d8;
-  --muted: #9d907b;
-  --accent: #c9a227;
+  --background: #ecdcb9;
+  --awning: #fbf3e4;
+  --surface: #fdf8ee;
+  --border: #d8c39a;
+  --foreground: #2a2018;
+  --muted: #8d7a5c;
+  --accent: #e0932e;
+  --accent-2: #b23a2c;
+  --ink: #221b14;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-awning: var(--awning);
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-ink: var(--ink);
   --font-serif: var(--font-menu-serif);
   --font-sans: var(--font-menu-sans);
+  --font-logo: var(--font-menu-logo);
 }
 
 body {
@@ -47,4 +54,34 @@ body {
   transform: translateX(-100%);
   background: linear-gradient(90deg, transparent, rgba(239, 231, 216, 0.06), transparent);
   animation: shimmer 1.6s infinite;
+}
+
+/*
+ * Scalloped awning edge. A row of circular cutouts masked into a solid bar —
+ * resolution-independent, no image asset needed. Tile width must match the
+ * radius doubled or the circles drift out of phase with each other.
+ *
+ * The gradient's opaque stop must be `white`, not `black`: Chromium's default
+ * mask-mode is luminance, where black reads as fully transparent too — using
+ * black here masks away the whole bar instead of just the circles.
+ */
+.scallop-edge {
+  height: 22px;
+  background: var(--awning);
+  -webkit-mask-image: radial-gradient(circle at 14px 0, transparent 14px, white 14.5px);
+  mask-image: radial-gradient(circle at 14px 0, transparent 14px, white 14.5px);
+  -webkit-mask-size: 28px 28px;
+  mask-size: 28px 28px;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+}
+
+/* Party-size box reads as a plain number, not a browser spinner. */
+.no-spinner::-webkit-inner-spin-button,
+.no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinner {
+  -moz-appearance: textfield;
 }
