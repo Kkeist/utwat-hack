@@ -12,9 +12,9 @@
 import { useState } from 'react';
 import type { Dish, DishFacts, MenuResponse } from '@/lib/types';
 import { UrlForm } from './components/UrlForm';
-import { PickCard } from './components/PickCard';
 import { MenuList } from './components/MenuList';
 import { Provenance } from './components/Provenance';
+import { PicksDialog } from './components/PicksDialog';
 
 const PREFETCH_COUNT = 8;
 
@@ -22,6 +22,8 @@ export default function Home() {
   const [result, setResult] = useState<MenuResponse | null>(null);
   const [facts, setFacts] = useState<Record<string, DishFacts>>({});
   const [busy, setBusy] = useState(false);
+  const [showPicks, setShowPicks] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function spin(url: string, partySize: number) {
@@ -38,6 +40,10 @@ export default function Home() {
       if (!res.ok) throw new Error(json.message ?? 'Something went wrong.');
       const menu = json as MenuResponse;
       setResult(menu);
+      // Deliberately NOT opened here. The button is the reveal — the spin is the
+      // moment of the app, and it should take a deliberate click to see it.
+      setShowPicks(false);
+      void upgradeText(menu);
       setFacts(menu.facts);
       void prefetch(menu);
     } catch (err) {
@@ -57,6 +63,36 @@ export default function Home() {
     if (!res.ok) return;
     const json = await res.json();
     setFacts((prev) => ({ ...json.facts, ...prev }));
+  }
+
+  /**
+   * Optional: ask Claude for better-written justifications. The picks are already
+   * on screen with the templated text, so this only ever improves what is there.
+   * An empty response means Claude was unreachable or unconfigured — the user
+   * sees no difference and no error.
+   */
+  async function upgradeText(menu: MenuResponse) {
+    setUpgrading(true);
+    try {
+      const res = await fetch('/api/justify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ picks: menu.picks, partySize: menu.partySize, signals: menu.signals }),
+      });
+      if (!res.ok) return;
+      const { justifications } = await res.json();
+      if (!justifications || !Object.keys(justifications).length) return;
+      setResult((prev) =>
+        prev && {
+          ...prev,
+          picks: prev.picks.map((p) => ({ ...p, justification: justifications[p.dish.name] ?? p.justification })),
+        },
+      );
+    } catch {
+      // Keep the templated text. Not a user-visible failure.
+    } finally {
+      setUpgrading(false);
+    }
   }
 
   /**
@@ -85,11 +121,22 @@ export default function Home() {
 
       {result && (
         <>
-          <section className="mt-10 grid gap-4">
-            {result.picks.map((pick, i) => (
-              <PickCard key={i} pick={pick} facts={facts[pick.dish.name]} />
-            ))}
+          <section className="mt-10">
+            <button
+              onClick={() => setShowPicks(true)}
+              className="rounded border border-accent px-5 py-3 text-lg text-accent"
+            >
+              See what you are having ({result.picks.length} dishes)
+            </button>
           </section>
+
+          <PicksDialog
+            picks={result.picks}
+            facts={facts}
+            open={showPicks}
+            onClose={() => setShowPicks(false)}
+            upgrading={upgrading}
+          />
 
           <section className="mt-12">
             <h2 className="mb-3 text-xl">The full menu</h2>

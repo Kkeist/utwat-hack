@@ -79,6 +79,7 @@ export async function POST(req: Request) {
       source: scraped.source,
       sessionViewerUrl: scraped.sessionViewerUrl,
       dishes,
+      partySize,
       picks,
       signals,
       facts,

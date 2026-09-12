@@ -101,6 +101,8 @@ export interface MenuResponse {
   seed: number;
   sessionViewerUrl?: string;
   dishes: Dish[];
+  /** Echoed back so the client does not have to remember what it asked for. */
+  partySize: number;
   picks: Pick[];
   /** The review scores this spin used. Echoed so the client can pass them to /api/justify. */
   signals: ReviewSignals;
