@@ -20,6 +20,8 @@ import { menuLooksReal, parseMenu } from '@/lib/parse-menu';
 import { hashSeed, seededRng, spin } from '@/lib/roulette';
 import { justify } from '@/lib/justify';
 import { lookupDishes } from '@/lib/dish-lookup';
+import { isMocked } from '@/lib/steel';
+import { SAMPLE_SIGNALS } from '@/lib/fixtures/sample-signals';
 
 export const runtime = 'nodejs';
 /** Matches the batch ceiling /api/dish enforces via DishRequestSchema. */
@@ -53,9 +55,13 @@ export async function POST(req: Request) {
     // injectable-RNG design unusable from outside.
     const seed = pinnedSeed ?? hashSeed(`${url}|${partySize}|${Date.now()}`);
     const rng = seededRng(seed);
-    const picks = spin(dishes, partySize, rng).map((p) => ({
+
+    // TODO(C): swap for workstream B's real scoring once the review scrape lands.
+    // An empty map is a valid input — a restaurant with no reviews spins uniformly.
+    const signals = isMocked() ? SAMPLE_SIGNALS : {};
+    const picks = spin(dishes, partySize, rng, signals).map((p) => ({
       ...p,
-      justification: justify(p.dish, p.course, partySize),
+      justification: justify(p.dish, p.course, partySize, signals[p.dish.name]),
     }));
 
     // Picked dishes only, deduped and capped. A party of 12 allocates 19 picks;

@@ -10,7 +10,7 @@
  *   - one dessert for the table
  * Avoid duplicates while the pool allows it. The RNG is injectable so demos repeat.
  */
-import type { ClassifiedDish, Course, Dish, Pick } from '@/lib/types';
+import type { ClassifiedDish, Course, Dish, Pick, ReviewSignal, ReviewSignals } from '@/lib/types';
 
 export type Rng = () => number;
 
@@ -117,6 +117,36 @@ function poolFor(pool: ClassifiedDish[], course: Course): ClassifiedDish[] {
 }
 
 /**
+ * How much a review signal tilts the wheel.
+ *
+ * Dampened with a square root on purpose: a dish with 41 net positive mentions
+ * should be the likely pick, not the certain one. Raw proportional weighting
+ * would make it ~41x and the roulette would stop being a roulette.
+ *
+ * A panned dish keeps a small but real chance of coming up. That is deliberate —
+ * the justification has a bank for exactly that case, and "the record contains
+ * objections, they have been overruled" is funnier than never seeing it.
+ */
+export function weightFor(signal?: ReviewSignal): number {
+  if (!signal || signal.score === 0) return 1;
+  return signal.score > 0
+    ? 1 + Math.sqrt(signal.score)
+    : Math.max(0.2, 1 / (1 - signal.score));
+}
+
+/** Weighted index into `pool`. Falls back to uniform when no dish carries a signal. */
+function weightedIndex(pool: ClassifiedDish[], rng: Rng, signals: ReviewSignals): number {
+  const weights = pool.map((d) => weightFor(signals[d.name]));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = rng() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return i;
+  }
+  return weights.length - 1;
+}
+
+/**
  * Draw up to n dishes without replacement. A shared course caps at the number of
  * distinct dishes available rather than padding with repeats — six "shared"
  * starters that are really the same soup three times is a bug, not a table.
@@ -128,6 +158,7 @@ function draw(
   rng: Rng,
   used: Set<string>,
   allowRepeats: boolean,
+  signals: ReviewSignals,
 ): ClassifiedDish[] {
   const out: ClassifiedDish[] = [];
   let fresh = pool.filter((d) => !used.has(d.name));
@@ -138,7 +169,7 @@ function draw(
       fresh = [...pool];
     }
     if (!fresh.length) break; // the course does not exist on this menu
-    const [dish] = fresh.splice(Math.floor(rng() * fresh.length), 1);
+    const [dish] = fresh.splice(weightedIndex(fresh, rng, signals), 1);
     used.add(dish.name);
     out.push(dish);
   }
@@ -149,21 +180,26 @@ function draw(
  * Allocate a table. Returns picks in meal order — starters, then mains by seat,
  * then the dessert — so the UI can render them straight down the page.
  *
+ * `signals` tilts the wheel toward what reviewers actually order. It defaults to
+ * empty, so a menu with no reviews spins uniformly and nothing downstream has to
+ * care whether the review scrape ran.
+ *
  * `justification` is filled in by the caller, which keeps this a pure function of
- * (dishes, partySize, rng) and makes it trivial to test.
+ * (dishes, partySize, rng, signals) and makes it trivial to test.
  */
 export function spin(
   dishes: Dish[],
   partySize: number,
   rng: Rng = Math.random,
+  signals: ReviewSignals = {},
 ): Omit<Pick, 'justification'>[] {
   const pool = classifyAll(dishes);
   const want = allocation(partySize);
   const used = new Set<string>();
 
-  const starters = draw(poolFor(pool, 'starter'), want.starter, rng, used, false);
-  const mains = draw(poolFor(pool, 'main'), want.main, rng, used, true);
-  const desserts = draw(poolFor(pool, 'dessert'), want.dessert, rng, used, false);
+  const starters = draw(poolFor(pool, 'starter'), want.starter, rng, used, false, signals);
+  const mains = draw(poolFor(pool, 'main'), want.main, rng, used, true, signals);
+  const desserts = draw(poolFor(pool, 'dessert'), want.dessert, rng, used, false, signals);
 
   return [
     ...starters.map((dish) => ({ dish, course: 'starter' as Course, shared: true })),

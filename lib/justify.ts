@@ -25,7 +25,7 @@
  * deliberately long: a table of four draws seven paragraphs, and two of them opening
  * the same way collapses the illusion of process.
  */
-import type { Course, Dish } from '@/lib/types';
+import type { Course, Dish, ReviewSignal } from '@/lib/types';
 import { hashSeed, seededRng } from '@/lib/roulette';
 
 export const OPENERS = [
@@ -394,7 +394,78 @@ export function partyLine(partySize: number, rng: () => number): string {
  * The seed is the dish itself, so the paragraph is a pure function of the pick:
  * identical across re-renders, across requests, and across machines.
  */
-export function justify(dish: Dish, course: Course, partySize: number): string {
+/**
+ * Slot 3b: corroboration. Emitted only when workstream B's review scoring found
+ * this dish mentioned at all — a menu with no reviews simply skips the slot.
+ *
+ * The four banks map to what the record actually says. The unfavourable bank is
+ * the point of the whole feature: a panned dish still comes up sometimes, and
+ * overruling the objection in writing is funnier than hiding the dish.
+ */
+export const CORROBORATION_STRONG = [
+  'The record contains {n} corroborating accounts.',
+  '{n} independent accounts corroborate this.',
+  'Corroboration is extensive: {n} separate accounts.',
+  'Prior parties have reached the same conclusion {n} times.',
+  'The supporting testimony runs to {n} accounts.',
+  '{n} accounts, none of them dissenting in substance.',
+  'This is the most heavily corroborated item in the file.',
+  'The weight of prior testimony is not close.',
+];
+
+export const CORROBORATION_SOME = [
+  'The record contains supporting testimony.',
+  'Prior parties have reached the same conclusion.',
+  'There is corroboration, and it is favourable.',
+  'At least one earlier party arrived here independently.',
+  'The supporting evidence is modest but unambiguous.',
+  'Earlier testimony points the same way.',
+  'The file contains no contrary account.',
+  'Precedent exists and it is favourable.',
+];
+
+export const CORROBORATION_CONTESTED = [
+  'The record is divided. The division has been resolved.',
+  'Opinion is split. A determination has nonetheless been made.',
+  'The testimony conflicts. This has been accounted for.',
+  'Prior parties disagreed. Their disagreement is noted and set aside.',
+  'The evidence points both ways. The finding stands regardless.',
+  'Contradictory accounts were reviewed in full.',
+  'Dissent was recorded. It did not alter the outcome.',
+  'The matter was contested and has been settled.',
+];
+
+export const CORROBORATION_AGAINST = [
+  'The record contains objections. They have been overruled.',
+  'Prior parties advised against this. Their advice has been considered.',
+  'The testimony is unfavourable. The selection stands.',
+  'Objections were filed. All were dismissed.',
+  'Earlier accounts counsel caution. Caution has been noted.',
+  'The file contains complaints. None were found material.',
+  'This selection proceeds over recorded objection.',
+  'The adverse testimony has been reviewed and discounted.',
+];
+
+/** Empty string when there is nothing to cite — the slot is then dropped. */
+export function corroboration(signal: ReviewSignal | undefined, rng: () => number): string {
+  if (!signal || signal.mentions <= 0) return '';
+  const bank =
+    signal.score >= 5
+      ? CORROBORATION_STRONG
+      : signal.score > 0
+        ? CORROBORATION_SOME
+        : signal.score === 0
+          ? CORROBORATION_CONTESTED
+          : CORROBORATION_AGAINST;
+  return bank[Math.floor(rng() * bank.length)].replace('{n}', String(signal.mentions));
+}
+
+export function justify(
+  dish: Dish,
+  course: Course,
+  partySize: number,
+  signal?: ReviewSignal,
+): string {
   const seed = `${dish.name}|${dish.category ?? ''}|${partySize}`;
 
   // One stream per slot rather than one stream for the paragraph. Slot 4 consumes no
@@ -408,6 +479,7 @@ export function justify(dish: Dish, course: Course, partySize: number): string {
     pickFrom(OPENERS, 'opener'),
     `You are having the ${dish.name}.`,
     pickFrom(COURSE_LINES[course] ?? COURSE_LINES.other, 'course'),
+    corroboration(signal, streamFor('corroboration')),
     understate(dish.description, streamFor('understate')),
     priceLine(dish, streamFor('price')),
     partyLine(partySize, streamFor('party')),

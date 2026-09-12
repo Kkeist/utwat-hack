@@ -65,6 +65,25 @@ export interface DishFacts {
   source: 'wikipedia' | 'menu' | 'none';
 }
 
+/**
+ * Review-derived signal for one dish, produced by workstream B from scraped
+ * reviews and consumed by workstream C. Two numbers, nothing else — C never
+ * sees raw review text.
+ *
+ * Scoring is per CLAUSE, not per review: a five-star review saying "the duck is
+ * great but the ratatouille is bad" must not credit the ratatouille. The star
+ * rating only breaks ties on clauses that carry no sentiment of their own.
+ */
+export interface ReviewSignal {
+  /** Clauses naming this dish at all, positive or negative. */
+  mentions: number;
+  /** Net sentiment: +1 per positive clause, -1 per negative. May be negative. */
+  score: number;
+}
+
+/** Keyed by the dish name exactly as it appears on the menu. */
+export type ReviewSignals = Record<string, ReviewSignal>;
+
 /** POST /api/menu request */
 export const MenuRequestSchema = z.object({
   url: z.string().url(),
