@@ -9,8 +9,8 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 - `start.bat` — dev server on http://localhost:3000 with `MOCK_STEEL=1`
   (no API key needed). Any URL-shaped input returns the sample menu.
 - `node scripts/screenshot.mjs screenshots` — phone / tablet / desktop
-  screenshots of the entry page, result page, an expanded row, and a
-  mid-scroll viewport. Needs the dev server running.
+  screenshots of the entry page, both result views, the dish dialog, a
+  search, and a mid-scroll viewport. Needs the dev server running.
 - `npm run typecheck`, `npm run lint`.
 
 ## Layout
@@ -62,7 +62,7 @@ two views are client-side over the loaded list.
 - Comments in English. Colours only through tokens in `globals.css`.
 - UI text only through `app/copy.ts`.
 - Icons as plain `<img>` (next/image caches by path; art is overwritten in place).
-- Fixed side walls are verified with viewport screenshots, never fullPage.
+- Side walls are full-height absolute columns, so fullPage screenshots show them.
 
 ## Open
 
