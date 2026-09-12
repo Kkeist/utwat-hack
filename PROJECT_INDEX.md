@@ -17,7 +17,8 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 
 | Path | What |
 | --- | --- |
-| `app/page.tsx` | Page shell, client state, fetches `/api/menu` and `/api/dish` |
+| `app/page.tsx` | Entry page; submitting goes to `/menu?url=…&party=…` |
+| `app/menu/page.tsx` | Result page route (Suspense around `MenuView`) |
 | `app/layout.tsx` | Fonts (Courgette script, Cormorant Garamond serif), table + wall backgrounds |
 | `app/globals.css` | All colour tokens, textures, wordmark, menu-card frame, leaders |
 | `app/copy.ts` | Every UI string |
@@ -34,16 +35,27 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
   rule. Every block on the page is one.
 - `SectionTitle` (same file) — script heading between two gold rules.
 - `Skeleton` — shimmer placeholder.
-- `Header` — the awning; `Hero` + `UrlForm` — entry form; `PickCard` — one
-  suggested dish; `MenuList` — grouped menu with expandable rows;
+- `controls.tsx` — `ButtonLink`, `ToggleGroup`, `SearchField`: one outlined
+  control style for the whole app.
+- `DishDetail.tsx` — `DishDetail` (photo, name, price, ingredient tags,
+  description; `layout` row or stack), `DishCard` (full view), `DishTile`
+  (compact view).
+- `Modal` — centred dialog, locks background scroll, Escape closes.
+- `MenuView` — the result page: fetch, batch prefetch, search filter,
+  view choice (remembered in localStorage), dialog state.
+- `MenuList` / `DishGrid` — grouped by course, in either view.
+- `Header` — the awning; `Hero` + `UrlForm` — entry form;
   `Provenance` — colophon line.
 
 ## Data flow
 
-URL + party size → `POST /api/menu` → scrape (Steel, or fixture when mocked)
-→ parse (or `SAMPLE_DISHES` when mocked) → picks + justification → facts for
-picks only → client renders, then prefetches facts for the first 8 other
-dishes via `POST /api/dish`; a row click fetches the rest on demand.
+URL + party size → `/menu` → `POST /api/menu` → scrape (Steel, or fixture
+when mocked) → parse (or `SAMPLE_DISHES` when mocked) → picks → facts for
+picks → client renders, then fetches facts for every other dish via
+`POST /api/dish` in batches of 12. Facts per dish merge two sources:
+Wikipedia sentence + photo (fixture when mocked) and TheMealDB ingredients
++ recipe photo (live, free API, name match must be tight). Search and the
+two views are client-side over the loaded list.
 
 ## Conventions
 
@@ -55,5 +67,5 @@ dishes via `POST /api/dish`; a row click fetches the rest on demand.
 ## Open
 
 - Real scrape path (`lib/scrape-menu.ts`) is still a stub.
-- Judge-style pick copy undecided.
+- Judge-style pick copy is returned by the API but not shown.
 - 5 sample dishes still without Wikipedia facts (rate limit on 2026-09-12).

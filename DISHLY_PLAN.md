@@ -51,8 +51,27 @@ Round of 2026-09-12, evening — full redo after the first pass missed the brief
 - [x] Mock result page shows the full sample menu (courses, descriptions,
       real Wikipedia photos for 11 dishes); the 5 remaining dishes hit a
       Wikipedia rate limit and still fall back to the menu's own text
-- [ ] Judge-style pick copy ("The matter has been settled…") is left as is —
-      owner has not decided whether Dishly keeps that voice
+- [x] Judge-style pick copy dropped from the page (round 2: owner said no AI
+      copy for now); the API still returns it, nothing reads it
+
+Round 2, same evening — owner feedback on the redo.
+
+- [x] URL box: lighter field, softer frame, no red focus ring
+- [x] Results on their own page (`/menu`) with a Back control to re-enter
+- [x] URL field pre-filled with the built-in test address
+- [x] Intro / about sentences stay. (Round 2 misread "no AI copy" as these
+      two lines and removed them; owner corrected it — the unwanted copy was
+      the judge-style suggestion text. Both lines restored.)
+- [x] Dish output as: photo, name, ingredient tags, description
+- [x] "Look it up" removed — it was a Google search link fallback
+- [x] Side walls run the full page height in every capture (were `fixed`;
+      now real full-height columns, so long screenshots show them too)
+- [x] In-page dish search
+- [x] Two views: full (one dish per row with details) and compact (photo +
+      name grid, click opens a centred dialog); choice remembered
+- [x] TheMealDB used as a test source for ingredients, descriptions, photos
+      (7 of the 23 sample dishes match; the rest fall back to Wikipedia
+      facts or the menu's own line)
 
 ## Tech stack
 
