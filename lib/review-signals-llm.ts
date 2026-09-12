@@ -47,9 +47,16 @@ Return, for each dish mentioned at all:
 
 Omit dishes that no review mentions. If a clause names two dishes comparatively ("the duck was better than the lamb"), skip that clause rather than guess.`;
 
+/**
+ * `budget` lets the caller cap this call. Warm-time runs can afford the default
+ * 45s plus a retry; a request handler cannot — /api/menu already spends up to
+ * 55s scraping reviews against a 120s maxDuration, so it passes a tighter
+ * budget rather than risking the whole request being cut off.
+ */
 export async function buildDishSignalsWithClaude(
   reviews: string[],
   dishNames: string[],
+  budget: { timeoutMs?: number; maxRetries?: number } = {},
 ): Promise<{ signals: DishSignal[]; source: 'claude' | 'lexicon' }> {
   const lexicon = () => ({ signals: buildDishSignals(reviews, dishNames), source: 'lexicon' as const });
 
@@ -57,7 +64,7 @@ export async function buildDishSignalsWithClaude(
   if (!process.env.ANTHROPIC_API_KEY) return lexicon();
 
   try {
-    const client = new Anthropic({ maxRetries: 1 });
+    const client = new Anthropic({ maxRetries: budget.maxRetries ?? 1 });
     const response = await client.messages.create(
       {
         model: 'claude-opus-5',
@@ -98,7 +105,7 @@ export async function buildDishSignalsWithClaude(
           },
         ],
       },
-      { timeout: TIMEOUT_MS },
+      { timeout: budget.timeoutMs ?? TIMEOUT_MS },
     );
 
     const text = response.content.find((b) => b.type === 'text');

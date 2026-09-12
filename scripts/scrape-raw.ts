@@ -14,23 +14,17 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { isMocked } from '../lib/steel';
 import { scrapeLooksThin, scrapeMenuDetailed, type ScrapeTrace } from '../lib/scrape-menu';
-import { reviewsFileMarkdown, scrapeReviews, findGoogleMapsUrl } from '../lib/scrape-reviews';
+import { parseMenu } from '../lib/parse-menu';
+import {
+  findGoogleMapsUrl,
+  nearFromUrl,
+  reviewQueryName,
+  reviewsFileMarkdown,
+  scrapeReviews,
+} from '../lib/scrape-reviews';
 
 function isKept(rowUrl: string, chosenUrl: string): boolean {
   return rowUrl === chosenUrl || rowUrl.startsWith(`${chosenUrl} [playwright]`);
-}
-
-function nearFromUrl(pageUrl: string): string | undefined {
-  try {
-    const host = new URL(pageUrl).hostname.toLowerCase();
-    if (host.endsWith('.paris') || host.includes('paris')) return 'Paris';
-    if (host.endsWith('.tokyo.jp') || host.includes('tokyo')) return 'Tokyo';
-    if (host.endsWith('.fr')) return 'Paris';
-    if (host.endsWith('.jp')) return 'Tokyo';
-  } catch {
-    return undefined;
-  }
-  return undefined;
 }
 
 function generalMarkdown(trace: ScrapeTrace): string {
@@ -105,7 +99,9 @@ async function main() {
   console.log(`menu:    ${menuFile}`);
   console.log(`general: ${pathFile}`);
 
-  const name = trace.result.restaurantName;
+  const name =
+    reviewQueryName(parseMenu(markdown), trace.result.restaurantName, url) ??
+    trace.result.restaurantName;
   if (name) {
     const mapsUrl = findGoogleMapsUrl(trace.generalMarkdown ?? '');
     console.log(`\n--- reviews (${name}) ---`);
@@ -113,7 +109,7 @@ async function main() {
     const reviews = await scrapeReviews(name, {
       mapsUrl,
       pageMarkdown: trace.generalMarkdown,
-      near: nearFromUrl(url),
+      near: nearFromUrl(url, name),
     });
     writeFileSync(reviewsFile, reviewsFileMarkdown(reviews), 'utf8');
     console.log(`source:  ${reviews.source}`);

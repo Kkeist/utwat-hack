@@ -14,7 +14,7 @@
  * reach the client bundle.
  */
 import { NextResponse } from 'next/server';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { MenuRequestSchema, type ApiError, type MenuResponse } from '@/lib/types';
 import { scrapeMenuDetailed } from '@/lib/scrape-menu';
@@ -23,8 +23,20 @@ import { hashSeed, seededRng, spin } from '@/lib/roulette';
 import { justify } from '@/lib/justify';
 import { lookupDishes } from '@/lib/dish-lookup';
 import { isMocked } from '@/lib/steel';
+import {
+  findGoogleMapsUrl,
+  nearFromUrl,
+  reviewQueryName,
+  reviewsFileMarkdown,
+  reviewTexts,
+  scrapeReviews,
+  type ReviewScrape,
+} from '@/lib/scrape-reviews';
+import { buildDishSignalsWithClaude } from '@/lib/review-signals-llm';
+import { toReviewSignals } from '@/lib/signals';
 import { SAMPLE_DISHES } from '@/lib/fixtures';
 import { SAMPLE_SIGNALS } from '@/lib/fixtures/sample-signals';
+import type { Dish, ReviewSignals } from '@/lib/types';
 
 export const runtime = 'nodejs';
 /** Matches the batch ceiling /api/dish enforces via DishRequestSchema. */
@@ -33,6 +45,47 @@ export const maxDuration = 120;
 
 function fail(message: string, status = 400) {
   return NextResponse.json<ApiError>({ error: true, message }, { status });
+}
+
+const REVIEW_LOOKUP_MS = 55_000;
+
+async function lookupReviewSignals(
+  dishes: Dish[],
+  name: string | undefined,
+  pageUrl: string,
+  pageMarkdown?: string,
+): Promise<{ signals: ReviewSignals; reviews?: ReviewScrape; scoredBy?: 'claude' | 'lexicon' }> {
+  const query = reviewQueryName(dishes, name, pageUrl);
+  if (!query) return { signals: {} };
+  try {
+    const scraped = await Promise.race([
+      scrapeReviews(query, {
+        mapsUrl: findGoogleMapsUrl(pageMarkdown ?? ''),
+        pageMarkdown,
+        near: nearFromUrl(pageUrl, query),
+      }),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), REVIEW_LOOKUP_MS)),
+    ]);
+    if (!scraped) return { signals: {} };
+    const chunks = reviewTexts(scraped.markdown);
+    if (!chunks.length) return { signals: {}, reviews: scraped };
+    // Claude first, lexicon second. buildDishSignalsWithClaude falls back on its
+    // own for every failure — no key, no credits, 429, timeout, bad JSON — and
+    // reports which one actually ran so the diagnostics dump can record it.
+    // Tight budget: the review scrape above may already have spent 55s of the
+    // route's 120s. One attempt, 20s, then the lexicon.
+    const scored = await buildDishSignalsWithClaude(chunks, dishes.map((d) => d.name), {
+      timeoutMs: 20_000,
+      maxRetries: 0,
+    });
+    return {
+      signals: toReviewSignals(scored.signals),
+      reviews: scraped,
+      scoredBy: scored.source,
+    };
+  } catch {
+    return { signals: {} };
+  }
 }
 
 export async function POST(req: Request) {
@@ -98,9 +151,45 @@ export async function POST(req: Request) {
     const seed = pinnedSeed ?? hashSeed(`${url}|${partySize}|${Date.now()}`);
     const rng = seededRng(seed);
 
-    // TODO(C): swap for workstream B's real scoring once the review scrape lands.
-    // An empty map is a valid input — a restaurant with no reviews spins uniformly.
-    const signals = isMocked() ? SAMPLE_SIGNALS : {};
+    const { signals, reviews, scoredBy } = isMocked()
+      ? { signals: SAMPLE_SIGNALS, reviews: undefined, scoredBy: undefined }
+      : await lookupReviewSignals(
+          dishes,
+          scraped.restaurantName,
+          url,
+          trace.generalMarkdown,
+        );
+
+    try {
+      const dir = join(process.cwd(), '.cache');
+      mkdirSync(dir, { recursive: true });
+      if (reviews) {
+        writeFileSync(join(dir, 'last-reviews.md'), reviewsFileMarkdown(reviews), 'utf8');
+      }
+      const scrapeDump = join(dir, 'last-scrape.json');
+      const prev = JSON.parse(readFileSync(scrapeDump, 'utf8')) as Record<string, unknown>;
+      writeFileSync(
+        scrapeDump,
+        JSON.stringify(
+          {
+            ...prev,
+            reviewSearch: reviews?.searchUrl,
+            reviewChars: reviews?.markdown.length ?? 0,
+            signalCount: Object.keys(signals).length,
+            scoredBy: scoredBy ?? 'none',
+            signals: Object.fromEntries(
+              Object.entries(signals).slice(0, 20),
+            ),
+          },
+          null,
+          2,
+        ),
+        'utf8',
+      );
+    } catch {
+      // Diagnostic dump only.
+    }
+
     const picks = spin(dishes, partySize, rng, signals).map((p) => ({
       ...p,
       justification: justify(p.dish, p.course, partySize, signals[p.dish.name]),

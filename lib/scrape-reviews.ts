@@ -532,3 +532,90 @@ export function reviewsFileMarkdown(reviews: ReviewScrape): string {
     '',
   ].join('\n');
 }
+
+/** City hint for review search. `.fr` defaults to Paris, `.jp` to Tokyo. */
+export function nearFromUrl(pageUrl: string, peeledName?: string): string | undefined {
+  try {
+    const host = new URL(pageUrl).hostname.toLowerCase();
+    if (host.endsWith('.paris') || host.includes('paris')) return 'Paris';
+    if (host.endsWith('.tokyo.jp') || host.includes('tokyo')) return 'Tokyo';
+    if (host.endsWith('.fr')) return 'Paris';
+    if (host.endsWith('.jp')) return 'Tokyo';
+    if (peeledName) {
+      const slug = host.replace(/^www\./, '').split('.')[0] ?? '';
+      const peeled = peeledName.replace(/\s+/g, '').toLowerCase();
+      if (
+        peeled.length >= 5 &&
+        slug.startsWith(peeled) &&
+        slug.length > peeled.length &&
+        /ny$/.test(slug)
+      ) {
+        return 'New York';
+      }
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Domain slugs like "Balthazarny" fail as review queries. Prefer a menu word
+ * that is a prefix of the slug ("Balthazar" from "Balthazar Egg Sandwich").
+ */
+export function reviewQueryName(
+  dishes: { name: string }[],
+  restaurantName: string | undefined,
+  pageUrl: string,
+): string | undefined {
+  let domain: string | undefined;
+  try {
+    const slug = new URL(pageUrl).hostname.replace(/^www\./i, '').split('.')[0] ?? '';
+    if (slug.length >= 3) {
+      domain = slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+  } catch {
+    domain = undefined;
+  }
+  const compact = (domain ?? restaurantName ?? '').replace(/\s+/g, '').toLowerCase();
+  if (compact.length >= 6 && dishes.length) {
+    const counts = new Map<string, number>();
+    for (const d of dishes) {
+      for (const raw of d.name.split(/\s+/)) {
+        const word = raw.replace(/[^A-Za-zÀ-ÿ]/g, '');
+        if (word.length < 5) continue;
+        const low = word.toLowerCase();
+        if (compact.includes(low) || low.startsWith(compact.slice(0, Math.min(6, compact.length)))) {
+          counts.set(word, (counts.get(word) ?? 0) + 1);
+        }
+      }
+    }
+    let best: string | undefined;
+    let n = 0;
+    for (const [word, c] of counts) {
+      if (c > n || (c === n && word.length > (best?.length ?? 0))) {
+        best = word;
+        n = c;
+      }
+    }
+    if (best) return best;
+  }
+  return restaurantName?.trim() || domain;
+}
+
+/** Split scraped review markdown into chunks the scorer can read. Empty on a failed scrape. */
+export function reviewTexts(markdown: string): string[] {
+  const text = markdown.trim();
+  if (!text || /^Could not load reviews/i.test(text)) return [];
+  const parts = text
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/^>\s?/gm, '').trim())
+    .filter(
+      (p) =>
+        p.length >= 40 &&
+        !/^#{1,6}\s/.test(p) &&
+        !/^- (source url|via):/i.test(p) &&
+        !/^Tried:$/i.test(p),
+    );
+  return parts.length ? parts : text.length >= 80 ? [text] : [];
+}
