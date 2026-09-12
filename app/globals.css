@@ -31,12 +31,28 @@
   --font-serif: var(--font-menu-serif);
   --font-sans: var(--font-menu-sans);
   --font-logo: var(--font-menu-logo);
+  --font-hand: var(--font-menu-hand);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-menu-serif), Georgia, "Times New Roman", serif;
+}
+
+/*
+ * Stage-curtain vignette: the two side margins read as a darker frame around
+ * the centered content, like the sketch's web layout. Only kicks in once
+ * there's actual margin to darken — on a phone-width viewport the content
+ * fills the screen and there is no "side" to shade.
+ */
+@media (min-width: 900px) {
+  body {
+    background:
+      linear-gradient(90deg, rgba(66, 41, 20, 0.4), transparent 18%, transparent 82%, rgba(66, 41, 20, 0.4)),
+      var(--background);
+    background-attachment: fixed;
+  }
 }
 
 /* Shimmer for the enrichment skeletons. Nothing blocks on a lookup. */
@@ -57,23 +73,19 @@ body {
 }
 
 /*
- * Scalloped awning edge. A row of circular cutouts masked into a solid bar —
- * resolution-independent, no image asset needed. Tile width must match the
- * radius doubled or the circles drift out of phase with each other.
- *
- * The gradient's opaque stop must be `white`, not `black`: Chromium's default
- * mask-mode is luminance, where black reads as fully transparent too — using
- * black here masks away the whole bar instead of just the circles.
+ * Pleated awning fabric — bold fold lines behind the header content, in a
+ * solid warm tan (not a gray/black tint, which reads as dirt on this
+ * palette). One layer, one weight — a second layered gradient at a
+ * different period was tried and looked like static, not fabric.
  */
-.scallop-edge {
-  height: 22px;
-  background: var(--awning);
-  -webkit-mask-image: radial-gradient(circle at 14px 0, transparent 14px, white 14.5px);
-  mask-image: radial-gradient(circle at 14px 0, transparent 14px, white 14.5px);
-  -webkit-mask-size: 28px 28px;
-  mask-size: 28px 28px;
-  -webkit-mask-repeat: repeat-x;
-  mask-repeat: repeat-x;
+.awning-pleats {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--border) 0,
+    var(--border) 6px,
+    transparent 6px,
+    transparent 48px
+  );
 }
 
 /* Party-size box reads as a plain number, not a browser spinner. */

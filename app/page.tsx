@@ -106,7 +106,7 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="font-logo pb-6 text-center text-xs tracking-wide text-muted">
+      <footer className="font-hand pb-6 text-center text-sm tracking-wide text-muted">
         made by 404 Brain Not Found
       </footer>
     </>
