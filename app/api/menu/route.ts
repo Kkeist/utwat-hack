@@ -77,6 +77,7 @@ export async function POST(req: Request) {
       url,
       seed,
       source: scraped.source,
+      restaurantName: scraped.restaurantName,
       sessionViewerUrl: scraped.sessionViewerUrl,
       dishes,
       partySize,

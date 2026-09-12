@@ -11,14 +11,17 @@ import type { ScrapeSource } from '@/lib/types';
 export function Provenance({
   dishCount,
   source,
+  restaurantName,
   sessionViewerUrl,
 }: {
   dishCount: number;
   source: ScrapeSource;
+  restaurantName?: string;
   sessionViewerUrl?: string;
 }) {
   return (
     <footer className="mt-10 border-t border-border pt-4 text-xs text-muted">
+      {restaurantName ? `${restaurantName} · ` : ''}
       {dishCount} dishes · via Steel {source === 'scrape' ? '/scrape' : 'session + Playwright'}
       {sessionViewerUrl && (
         <>

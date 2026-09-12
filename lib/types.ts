@@ -32,6 +32,8 @@ export type ScrapeSource = 'scrape' | 'playwright';
 export interface MenuScrape {
   markdown: string;
   source: ScrapeSource;
+  /** Best-effort restaurant name from Steel metadata / page title. */
+  restaurantName?: string;
   /** Only set on the playwright path — the live session viewer for demos. */
   sessionViewerUrl?: string;
 }
@@ -41,6 +43,7 @@ export interface Menu {
   url: string;
   dishes: Dish[];
   source: ScrapeSource;
+  restaurantName?: string;
   sessionViewerUrl?: string;
 }
 
@@ -99,6 +102,7 @@ export interface MenuResponse {
   source: ScrapeSource;
   /** The seed this spin actually used. Send it back as `seed` to replay the table. */
   seed: number;
+  restaurantName?: string;
   sessionViewerUrl?: string;
   dishes: Dish[];
   /** Echoed back so the client does not have to remember what it asked for. */

@@ -150,6 +150,7 @@ export default function Home() {
           <Provenance
             dishCount={result.dishes.length}
             source={result.source}
+            restaurantName={result.restaurantName}
             sessionViewerUrl={result.sessionViewerUrl}
           />
         </>
