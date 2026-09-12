@@ -40,7 +40,9 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 - `DishDetail.tsx` — `DishDetail` (photo, name, price, ingredient tags,
   description; `layout` row or stack), `DishCard` (full view), `DishTile`
   (compact view).
-- `Modal` — centred dialog, locks background scroll, Escape closes.
+- `IngredientFilter` — collapsed Include / Exclude filter: chips inside the
+  box, type-to-narrow, click-to-pick list.
+- `Modal` — centred dialog, pinned Close, locks background scroll, Escape closes.
 - `MenuView` — the result page: fetch, batch prefetch, search filter,
   view choice (remembered in localStorage), dialog state.
 - `MenuList` / `DishGrid` — grouped by course, in either view.

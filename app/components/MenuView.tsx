@@ -16,6 +16,7 @@ import { copy } from '../copy';
 import { Card, SectionTitle } from './Card';
 import { ButtonLink, SearchField, ToggleGroup } from './controls';
 import { DishDetail } from './DishDetail';
+import { IngredientFilter, type IngredientMode } from './IngredientFilter';
 import { Header } from './Header';
 import { DishGrid, MenuList, type MenuView as View } from './MenuList';
 import { Modal } from './Modal';
@@ -70,6 +71,8 @@ export function MenuView() {
   const [facts, setFacts] = useState<Record<string, DishFacts>>({});
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const [ingredientMode, setIngredientMode] = useState<IngredientMode>('include');
+  const [ingredients, setIngredients] = useState<string[]>([]);
   const view = useSyncExternalStore(subscribeView, readView, () => 'full' as View);
   const [openDish, setOpenDish] = useState<Dish | null>(null);
 
@@ -119,22 +122,45 @@ export function MenuView() {
     };
   }, [url, partySize]);
 
+  /** Every ingredient any looked-up dish has, once (case-insensitive), alphabetical. */
+  const ingredientOptions = useMemo(() => {
+    const all = new Map<string, string>();
+    for (const f of Object.values(facts)) {
+      for (const i of f.ingredients ?? []) if (!all.has(plain(i))) all.set(plain(i), i);
+    }
+    return Array.from(all.values()).sort((a, b) => a.localeCompare(b));
+  }, [facts]);
+
+  /**
+   * Text query over everything known about a dish, then the ingredient
+   * filter: Include keeps dishes that have every chosen ingredient, Exclude
+   * drops dishes that have any of them (a dish with no ingredient data
+   * cannot match an Include and is kept by an Exclude).
+   */
   const matches = useMemo(() => {
     if (!result) return [];
     const q = plain(query.trim());
-    if (!q) return result.dishes;
     return result.dishes.filter((dish) => {
       const f = facts[dish.name];
-      const hay = [dish.name, dish.description, dish.category, f?.description, ...(f?.ingredients ?? [])]
-        .filter(Boolean)
-        .map((s) => plain(s as string))
-        .join(' ');
-      return hay.includes(q);
+      if (q) {
+        const hay = [dish.name, dish.description, dish.category, f?.description, ...(f?.ingredients ?? [])]
+          .filter(Boolean)
+          .map((s) => plain(s as string))
+          .join(' ');
+        if (!hay.includes(q)) return false;
+      }
+      if (ingredients.length) {
+        const has = new Set((f?.ingredients ?? []).map(plain));
+        return ingredientMode === 'include'
+          ? ingredients.every((i) => has.has(plain(i)))
+          : !ingredients.some((i) => has.has(plain(i)));
+      }
+      return true;
     });
-  }, [result, facts, query]);
+  }, [result, facts, query, ingredients, ingredientMode]);
 
   const close = useCallback(() => setOpenDish(null), []);
-  const searching = query.trim().length > 0;
+  const filtering = query.trim().length > 0 || ingredients.length > 0;
 
   return (
     <>
@@ -143,25 +169,35 @@ export function MenuView() {
       <main className="mx-auto w-full max-w-[44rem] flex-1 px-4 pt-3 pb-14 sm:px-6 sm:pt-4">
         <div className="grid gap-8 sm:gap-10">
           <Card className="py-5 sm:py-6">
+            {/* Phone: Back and the view toggle share the first row, search takes the second. */}
             <div className="flex flex-wrap items-center gap-3">
               <ButtonLink href="/">{copy.back}</ButtonLink>
-              <div className="min-w-[12rem] flex-1">
+              <div className="order-3 basis-full sm:order-2 sm:basis-auto sm:flex-1">
                 <SearchField value={query} onChange={setQuery} label={copy.searchDishes} />
               </div>
-              <ToggleGroup
-                label={copy.menuTitle}
-                value={view}
-                onChange={writeView}
-                options={[
-                  { value: 'full', label: copy.viewFull },
-                  { value: 'compact', label: copy.viewCompact },
-                ]}
-              />
+              <div className="order-2 ml-auto sm:order-3 sm:ml-0">
+                <ToggleGroup
+                  label={copy.menuTitle}
+                  value={view}
+                  onChange={writeView}
+                  options={[
+                    { value: 'full', label: copy.viewFull },
+                    { value: 'compact', label: copy.viewCompact },
+                  ]}
+                />
+              </div>
             </div>
+            {result && <p className="mt-3 italic text-ink-soft">{hostOf(result.url)}</p>}
             {result && (
-              <p className="mt-3 italic text-ink-soft">
-                {hostOf(result.url)}, {copy.forTable(partySize)}
-              </p>
+              <div className="mt-3">
+                <IngredientFilter
+                  options={ingredientOptions}
+                  selected={ingredients}
+                  mode={ingredientMode}
+                  onSelectedChange={setIngredients}
+                  onModeChange={setIngredientMode}
+                />
+              </div>
             )}
           </Card>
 
@@ -180,9 +216,10 @@ export function MenuView() {
 
           {result && (
             <div data-results className="grid gap-8 sm:gap-10">
-              {result.picks.length > 0 && !searching && (
+              {result.picks.length > 0 && !filtering && (
                 <Card>
                   <SectionTitle>{copy.suggestionsTitle}</SectionTitle>
+                  <p className="mt-2 text-center italic text-ink-soft">{copy.forTable(partySize)}</p>
                   <div className="mt-6">
                     <DishGrid
                       dishes={result.picks.map((p) => p.dish)}

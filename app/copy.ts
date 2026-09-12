@@ -27,6 +27,13 @@ export const copy = {
   viewCompact: 'Compact',
   noMatches: 'No dishes match.',
   close: 'Close',
+  ingredients: 'Ingredients',
+  include: 'Include',
+  exclude: 'Exclude',
+  ingredientPlaceholder: 'Type an ingredient',
+  noIngredientsYet: 'Ingredients appear as dishes are looked up.',
+  remove: (name: string) => `Remove ${name}`,
+  clear: 'Clear',
   dishesRead: (count: number, path: string) =>
     `${count} ${count === 1 ? 'dish' : 'dishes'}, read with Steel ${path}.`,
   scrapePath: '/scrape',

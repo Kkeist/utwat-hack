@@ -73,6 +73,16 @@ Round 2, same evening — owner feedback on the redo.
       (7 of the 23 sample dishes match; the rest fall back to Wikipedia
       facts or the menu's own line)
 
+Round 3, same evening.
+
+- [x] Search matches detailed content (name, menu line, course, looked-up
+      description, ingredients) — verified, already the case
+- [x] Dialog Close pinned in place, does not scroll away
+- [x] Phone toolbar: Back + Full/Compact on the first row, search on the second
+- [x] "for a table of N" moved into Chef's suggestions
+- [x] Collapsed ingredient filter: Include / Exclude, type-to-search with
+      chips inside the box, plus a click-to-pick list
+
 ## Tech stack
 
 - Web-agent scraping step uses [Steel.dev](https://steel.dev) (cloud

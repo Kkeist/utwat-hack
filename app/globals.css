@@ -170,6 +170,11 @@ body {
   border-color: var(--room);
   box-shadow: 0 0 0 3px rgba(47, 68, 52, 0.18);
 }
+/* A field inside a field: the outer box shows the focus, the inner input must not. */
+.bare:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 input[type="search"]::-webkit-search-cancel-button {
   appearance: none;
 }

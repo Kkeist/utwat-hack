@@ -109,11 +109,15 @@ async function fetchFromMealDb(dish: Dish): Promise<{ photoUrl?: string; ingredi
     });
     if (!meal) return undefined;
 
-    // Recipes list an ingredient twice when it is used in two steps; once is enough here.
+    // Recipes list an ingredient twice when it is used in two steps, and
+    // capitalise inconsistently across recipes ("butter", "Butter"); one
+    // spelling, once.
     const ingredients: string[] = [];
     for (let i = 1; i <= 20; i++) {
-      const v = meal[`strIngredient${i}`]?.trim();
-      if (v && !ingredients.some((x) => x.toLowerCase() === v.toLowerCase())) ingredients.push(v);
+      const raw = meal[`strIngredient${i}`]?.trim();
+      if (!raw) continue;
+      const v = raw.charAt(0).toUpperCase() + raw.slice(1);
+      if (!ingredients.some((x) => x.toLowerCase() === v.toLowerCase())) ingredients.push(v);
     }
     return { photoUrl: meal.strMealThumb ?? undefined, ingredients };
   } catch {

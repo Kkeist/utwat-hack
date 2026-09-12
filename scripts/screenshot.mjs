@@ -56,6 +56,14 @@ for (const [name, w, h] of sizes) {
   await page.fill('input[type="search"]', 'duck');
   await page.waitForTimeout(400);
   await page.screenshot({ path: file('search', name), fullPage: true });
+  await page.fill('input[type="search"]', '');
+
+  // Ingredient filter: open it, type, pick the first match with Enter.
+  await page.click('button[aria-controls]');
+  await page.fill('input[aria-label="Type an ingredient"]', 'gar');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: file('ingredients', name), fullPage: false });
 
   await page.close();
 }

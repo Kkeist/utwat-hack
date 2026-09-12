@@ -2,9 +2,10 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * Centred dialog on a darkened table. Closes on the backdrop, the close
- * button, or Escape. While open the page behind cannot scroll; the scroll
- * position is untouched, so closing lands exactly where the user was.
+ * Centred dialog on a darkened table. The content scrolls inside the card;
+ * the Close button sits on the card's top edge, outside the scrolling area,
+ * so it never moves. Closes on the backdrop, the button, or Escape. While
+ * open the page behind cannot scroll; its position is untouched.
  */
 import { useEffect, useRef, type ReactNode } from 'react';
 import { copy } from '../copy';
@@ -46,22 +47,18 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-xl"
+        className="relative w-full max-w-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <Card className="max-h-[85vh] overflow-y-auto overscroll-contain">
-          {children}
-          <div className="mt-6 text-center">
-            <button
-              ref={closeRef}
-              type="button"
-              onClick={onClose}
-              className="inline-flex min-h-11 items-center justify-center rounded-none border border-room px-5 text-base font-semibold tracking-wide text-room hover:bg-room/10"
-            >
-              {copy.close}
-            </button>
-          </div>
-        </Card>
+        <Card className="max-h-[85vh] overflow-y-auto overscroll-contain pt-14 sm:pt-14">{children}</Card>
+        <button
+          ref={closeRef}
+          type="button"
+          onClick={onClose}
+          className="absolute top-3 right-3 inline-flex min-h-11 items-center justify-center rounded-none border border-room bg-cream px-4 text-base font-semibold tracking-wide text-room hover:bg-room hover:text-cream"
+        >
+          {copy.close}
+        </button>
       </div>
     </div>
   );
