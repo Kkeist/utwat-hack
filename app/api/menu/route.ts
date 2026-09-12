@@ -22,8 +22,11 @@ import { justify } from '@/lib/justify';
 import { lookupDishes } from '@/lib/dish-lookup';
 import { isMocked } from '@/lib/steel';
 import { SAMPLE_DISHES } from '@/lib/fixtures';
+import { SAMPLE_SIGNALS } from '@/lib/fixtures/sample-signals';
 
 export const runtime = 'nodejs';
+/** Matches the batch ceiling /api/dish enforces via DishRequestSchema. */
+const MAX_PICK_LOOKUPS = 12;
 export const maxDuration = 60;
 
 function fail(message: string, status = 400) {
@@ -34,7 +37,7 @@ export async function POST(req: Request) {
   const body = MenuRequestSchema.safeParse(await req.json().catch(() => null));
   if (!body.success) return fail('Give me a restaurant URL and a party size.');
 
-  const { url, partySize } = body.data;
+  const { url, partySize, seed: pinnedSeed } = body.data;
 
   try {
     const scraped = await scrapeMenu(url);
@@ -50,21 +53,38 @@ export async function POST(req: Request) {
       );
     }
 
-    const rng = seededRng(hashSeed(`${url}|${partySize}|${Date.now()}`));
-    const picks = spin(dishes, partySize, rng).map((p) => ({
+    // A fresh table each spin, but the seed is returned so any result can be
+    // replayed exactly — mixing Date.now() straight into the RNG made the
+    // injectable-RNG design unusable from outside.
+    const seed = pinnedSeed ?? hashSeed(`${url}|${partySize}|${Date.now()}`);
+    const rng = seededRng(seed);
+
+    // TODO(C): swap for workstream B's real scoring once the review scrape lands.
+    // An empty map is a valid input — a restaurant with no reviews spins uniformly.
+    const signals = isMocked() ? SAMPLE_SIGNALS : {};
+    const picks = spin(dishes, partySize, rng, signals).map((p) => ({
       ...p,
-      justification: justify(p.dish, p.course, partySize),
+      justification: justify(p.dish, p.course, partySize, signals[p.dish.name]),
     }));
 
-    // Picked dishes only — typically 2-5 lookups.
-    const facts = await lookupDishes(picks.map((p) => p.dish));
+    // Picked dishes only, deduped and capped. A party of 12 allocates 19 picks;
+    // enriching them raw would fire 19 concurrent lookups — over this app's own
+    // batch ceiling, and a slow demo once these are real Steel calls.
+    const toEnrich = [...new Map(picks.map((p) => [p.dish.name, p.dish])).values()].slice(
+      0,
+      MAX_PICK_LOOKUPS,
+    );
+    const facts = await lookupDishes(toEnrich);
 
     return NextResponse.json<MenuResponse>({
       url,
+      seed,
       source: scraped.source,
       sessionViewerUrl: scraped.sessionViewerUrl,
       dishes,
+      partySize,
       picks,
+      signals,
       facts,
     });
   } catch (err) {

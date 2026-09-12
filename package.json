@@ -1,5 +1,5 @@
 {
-  "name": "web-agent",
+  "name": "dishly",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,10 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
     "next": "16.3.5",
     "playwright-core": "^1.63.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "sentiment": "^5.0.2",
     "steel-sdk": "^0.18.0",
     "zod": "^4.6.2"
   },
@@ -24,6 +26,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sentiment": "^5.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
