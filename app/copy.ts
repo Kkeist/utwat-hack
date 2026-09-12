@@ -12,8 +12,6 @@ export const copy = {
     'Dishly looks up every dish on the menu for you: what the name actually means, what food it is, and a reference photo, so you can find something you will like.',
   urlLabel: 'Restaurant URL',
   urlPlaceholder: 'Fill in the URL',
-  /** Pre-filled so a test run is one click. Any URL works while mocked. */
-  testUrl: 'https://example.com/menu',
   partySize: 'Party size',
   search: 'Search',
   back: 'Back',
