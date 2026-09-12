@@ -47,3 +47,7 @@ next-env.d.ts
 # If we deploy, either commit this or move the disk layer to Vercel KV.
 /.cache/*
 !/.cache/.gitkeep
+
+# Generated Next.js agent rules. Regenerated on build; local to each checkout.
+/AGENTS.md
+/CLAUDE.md
