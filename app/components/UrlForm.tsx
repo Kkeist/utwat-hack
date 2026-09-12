@@ -1,6 +1,7 @@
 'use client';
-/** OWNER: Workstream D (UI) — the entry point. URL + party size. */
+/** OWNER: Workstream D (UI) — the entry point. URL + party size + the plate. */
 import { useState } from 'react';
+import { copy } from '../copy';
 
 export function UrlForm({
   onSubmit,
@@ -16,7 +17,7 @@ export function UrlForm({
 
   return (
     <form
-      className="font-sans flex flex-col items-center gap-6"
+      className="flex flex-col items-center gap-6"
       onSubmit={(e) => {
         e.preventDefault();
         if (url.trim()) onSubmit(url.trim(), partySize);
@@ -25,33 +26,37 @@ export function UrlForm({
       <input
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        placeholder="Fill in the URL"
-        aria-label="Restaurant URL"
-        className="w-full rounded-none border-[3px] border-ink bg-surface px-5 py-1.5 text-xl text-foreground outline-none placeholder:text-muted focus:border-accent"
+        placeholder={copy.urlPlaceholder}
+        aria-label={copy.urlLabel}
+        className="w-full rounded-none border-2 border-ink bg-cream-deep px-4 py-2 text-xl text-ink placeholder:text-ink-soft focus:border-tomato focus-visible:outline-none"
       />
 
-      <label className="flex items-baseline gap-3 text-xl text-foreground">
-        Party size
+      <label className="flex items-baseline gap-3 text-xl">
+        {copy.partySize}
         <input
           type="number"
           min={1}
           max={12}
           value={partySize}
           onChange={(e) => setPartySize(clamp(Number(e.target.value) || 1))}
-          aria-label="Party size"
-          className="h-12 w-16 border-2 border-ink bg-surface text-center text-3xl font-bold text-foreground outline-none focus:border-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          aria-label={copy.partySize}
+          className="h-12 w-16 rounded-none border-2 border-ink bg-cream-deep text-center text-3xl font-semibold text-ink focus:border-tomato focus-visible:outline-none"
         />
       </label>
 
       <button
         type="submit"
         disabled={busy}
-        className="flex flex-col items-center gap-2 disabled:opacity-40"
+        className="group flex flex-col items-center gap-1 disabled:opacity-50"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icons/plate-mark.png" alt="" className="h-40 w-40 sm:h-48 sm:w-48" />
-        <span className="font-sans text-2xl font-extrabold tracking-wide text-ink uppercase">
-          {busy ? 'Searching…' : 'Search'}
+        <img
+          src="/icons/plate-mark.png"
+          alt=""
+          className="h-40 w-40 transition-transform duration-200 group-hover:scale-[1.04] group-active:scale-[0.98] motion-reduce:transition-none sm:h-52 sm:w-52"
+        />
+        <span className="text-2xl font-semibold tracking-[0.25em] text-ink uppercase">
+          {busy ? copy.searching : copy.search}
         </span>
       </button>
     </form>

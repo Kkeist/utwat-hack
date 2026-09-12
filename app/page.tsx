@@ -11,38 +11,51 @@
  */
 import { useState } from 'react';
 import type { Dish, DishFacts, MenuResponse } from '@/lib/types';
+import { copy } from './copy';
+import { Card, SectionTitle } from './components/Card';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { PickCard } from './components/PickCard';
 import { MenuList } from './components/MenuList';
 import { Provenance } from './components/Provenance';
+import { Skeleton } from './components/Skeleton';
 
 const PREFETCH_COUNT = 8;
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+}
 
 export default function Home() {
   const [result, setResult] = useState<MenuResponse | null>(null);
   const [facts, setFacts] = useState<Record<string, DishFacts>>({});
+  const [partySize, setPartySize] = useState(2);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function spin(url: string, partySize: number) {
+  async function spin(url: string, size: number) {
     setBusy(true);
     setError(null);
     setResult(null);
+    setPartySize(size);
     try {
       const res = await fetch('/api/menu', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url, partySize }),
+        body: JSON.stringify({ url, partySize: size }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.message ?? 'Something went wrong.');
+      if (!res.ok) throw new Error(json.message ?? copy.genericError);
       const menu = json as MenuResponse;
       setResult(menu);
       setFacts(menu.facts);
       void prefetch(menu);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setError(err instanceof Error ? err.message : copy.genericError);
     } finally {
       setBusy(false);
     }
@@ -75,40 +88,58 @@ export default function Home() {
     <>
       <Header />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 pb-12">
-        <Hero onSubmit={spin} busy={busy} />
+      <main className="mx-auto w-full max-w-[44rem] flex-1 px-4 pt-3 pb-14 sm:px-6 sm:pt-4">
+        <div className="grid gap-8 sm:gap-10">
+          <Hero onSubmit={spin} busy={busy} />
 
-        {error && <p className="mt-6 text-center text-sm text-accent-2">{error}</p>}
+          {error && <p className="text-center text-tomato">{error}</p>}
 
-        {result && (
-          <>
-            <section className="mt-10 grid gap-4">
-              {result.picks.map((pick, i) => (
-                <PickCard key={i} pick={pick} facts={facts[pick.dish.name]} />
-              ))}
-            </section>
+          {busy && (
+            <Card>
+              <SectionTitle>{copy.readingMenu}</SectionTitle>
+              <div className="mt-6 grid gap-3">
+                {[80, 60, 72, 55, 66, 48].map((w, i) => (
+                  <Skeleton key={i} className="h-6" style={{ width: `${w}%` }} />
+                ))}
+              </div>
+            </Card>
+          )}
 
-            <section className="mt-12">
-              <h2 className="mb-3 text-xl font-extrabold">The full menu</h2>
-              <MenuList
-                dishes={result.dishes}
-                facts={facts}
-                onSelect={(dish) => void enrich([dish])}
-              />
-            </section>
+          {result && (
+            <div data-results className="grid gap-8 sm:gap-10">
+              <Card>
+                <SectionTitle>{copy.suggestionsTitle}</SectionTitle>
+                <p className="mt-2 text-center italic text-ink-soft">
+                  {copy.forTable(partySize)}, {hostOf(result.url)}
+                </p>
+                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                  {result.picks.map((pick, i) => (
+                    <PickCard key={i} pick={pick} facts={facts[pick.dish.name]} />
+                  ))}
+                </div>
+              </Card>
 
-            <Provenance
-              dishCount={result.dishes.length}
-              source={result.source}
-              sessionViewerUrl={result.sessionViewerUrl}
-            />
-          </>
-        )}
+              <Card>
+                <SectionTitle>{copy.menuTitle}</SectionTitle>
+                <div className="mt-8">
+                  <MenuList
+                    dishes={result.dishes}
+                    facts={facts}
+                    onSelect={(dish) => void enrich([dish])}
+                  />
+                </div>
+                <Provenance
+                  dishCount={result.dishes.length}
+                  source={result.source}
+                  sessionViewerUrl={result.sessionViewerUrl}
+                />
+              </Card>
+            </div>
+          )}
+        </div>
       </main>
 
-      <footer className="font-sans pb-6 text-center text-sm tracking-wide text-muted">
-        made by 404 Brain Not Found
-      </footer>
+      <footer className="pb-8 text-center text-base italic text-ink-soft">{copy.madeBy}</footer>
     </>
   );
 }

@@ -3,63 +3,70 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * Vintage Italian-trattoria order-slip register: kraft paper, tomato red,
- * olive, dark espresso ink. Grain texture (`.paper-grain`) is what keeps a
- * warm tan from reading as a flat, "dirty" color block — real kraft paper
- * has visible fiber, a flat fill of the same hex does not.
+ * A printed trattoria menu card lying on a kraft-paper table, in a room with
+ * deep green walls. Three materials, three tones:
+ *   room   — bottle green linen (side walls, awning stripe)
+ *   ground — kraft paper (the table)
+ *   cream  — the menu card stock itself
+ * Tomato red is spent in one place: the painted wordmark on the awning.
  */
 :root {
-  --background: #ddc298;
-  --awning: #f2e2bd;
-  --surface: #f8edd6;
-  --border: #b99863;
-  --foreground: #332516;
-  --muted: #8a7355;
-  --accent: #c1442d;
-  --accent-2: #7a8c4a;
-  --ink: #2c1f13;
-  --stripe: #cf9b3f;
-  --side-panel: #a9814f;
+  --ground: #d5b98a;
+  --room: #2f4434;
+  --room-deep: #243528;
+  --cream: #f7eddb;
+  --cream-deep: #eddfc4;
+  --ink: #2a1b10;
+  --ink-soft: #6e5a44;
+  --tomato: #bf3220;
+  --gold: #a8823f;
+  --gold-soft: #cdb17a;
+  --stripe-width: 56px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-awning: var(--awning);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
+  --color-ground: var(--ground);
+  --color-room: var(--room);
+  --color-room-deep: var(--room-deep);
+  --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
   --color-ink: var(--ink);
-  --color-side-panel: var(--side-panel);
-  --font-serif: var(--font-menu-serif);
-  --font-sans: var(--font-menu-sans);
+  --color-ink-soft: var(--ink-soft);
+  --color-tomato: var(--tomato);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --font-serif: var(--font-serif-var);
+  --font-script: var(--font-script-var);
 }
 
-/*
- * Inter everywhere by default — the serif is reserved for dish names only
- * (applied directly where those render), not the whole page. A previous
- * pass left the page-wide default on the serif, which made every heading
- * in the results section render in an italic-leaning display face that
- * had nothing to do with the sans-serif hero above it.
- */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-menu-sans), system-ui, sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-serif-var), Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--tomato);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --stripe-width: 40px;
+  }
 }
 
 /*
- * Fine grayscale noise, tiled, at very low alpha — reads as paper fiber, not
- * as a visible pattern. Generated with feTurbulence so no image asset is
- * needed and it never goes soft at any zoom level.
- *
- * Deliberately does NOT set `position` itself — every caller already has one
- * (fixed, relative) from its own utility classes. Setting `position:
- * relative` here would fight the `fixed` utility on the side panels: this
- * plain rule sits outside any `@layer`, so it wins the cascade over a
- * Tailwind utility regardless of source order.
+ * Paper fibre: tiled feTurbulence noise at low alpha. A flat warm fill reads
+ * as a dirty colour block; the same fill with visible grain reads as paper.
+ * Does not set `position` — every caller already has one.
  */
 .paper-grain {
   isolation: isolate;
@@ -72,7 +79,89 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
 }
 
-/* Shimmer for the enrichment skeletons. Nothing blocks on a lookup. */
+/* Card stock: same fibre, much fainter, multiplied so it never greys the cream. */
+.stock-grain::before {
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
+
+/* Woven linen for the green walls: two hairline weaves over the base colour. */
+.linen {
+  background-color: var(--room);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 3px);
+}
+
+/* Awning canvas: wide, equal green and cream stripes. */
+.awning-stripes {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--room) 0,
+    var(--room) var(--stripe-width),
+    var(--cream) var(--stripe-width),
+    var(--cream) calc(var(--stripe-width) * 2)
+  );
+}
+
+/*
+ * The painted wordmark. Tomato script with a thick cream halo so it stays
+ * legible whether a letter lands on a green stripe or a cream one. The halo
+ * is a second copy of the text drawn behind with text-stroke — layering two
+ * copies works everywhere, unlike `paint-order` on HTML text.
+ */
+.wordmark {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-script-var), cursive;
+  color: var(--tomato);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  filter: drop-shadow(0 0.05em 0 rgba(42, 27, 16, 0.28));
+}
+.wordmark::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: var(--cream);
+  -webkit-text-stroke: 0.16em var(--cream);
+}
+
+/*
+ * The menu card: cream stock with a printed double rule — a thin outer line,
+ * a cream gap, a thin inner line — drawn with inset shadows so it never
+ * affects layout, plus a soft lift off the table.
+ */
+.menu-card {
+  background: var(--cream);
+  border: 1.5px solid var(--gold);
+  box-shadow:
+    inset 0 0 0 5px var(--cream),
+    inset 0 0 0 6px var(--gold),
+    0 18px 32px -20px rgba(42, 27, 16, 0.6);
+}
+
+/* Dotted price leader between a dish name and its price. */
+.leader {
+  flex: 1 1 auto;
+  min-width: 1.5rem;
+  border-bottom: 2px dotted var(--gold-soft);
+  transform: translateY(-0.35em);
+}
+
+/* Number input without the browser's spinner. */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* Shimmer for facts that have not landed yet. */
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
@@ -85,21 +174,9 @@ body {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(239, 231, 216, 0.06), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
   animation: shimmer 1.6s infinite;
 }
-
-/*
- * Awning fabric — wide, equal-width yellow/white stripes (the classic
- * storefront-canopy pattern), not thin fold lines.
- */
-.awning-pleats {
-  background-image: repeating-linear-gradient(
-    90deg,
-    var(--stripe) 0,
-    var(--stripe) 48px,
-    var(--awning) 48px,
-    var(--awning) 96px
-  );
+@media (prefers-reduced-motion: reduce) {
+  .shimmer::after { animation: none; }
 }
-

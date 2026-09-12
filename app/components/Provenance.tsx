@@ -1,12 +1,11 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * Footer. Dish count and which Steel path produced the menu — useful to us while
- * debugging, and it quietly demonstrates the two-tier strategy to judges. When the
- * playwright path ran, link the live session viewer: that is the sponsor moment.
- * (Design doc §9, §10.)
+ * The colophon at the foot of the menu card: dish count and which Steel path
+ * produced it. When the browser path ran, link the live session viewer.
  */
 import type { ScrapeSource } from '@/lib/types';
+import { copy } from '../copy';
 
 export function Provenance({
   dishCount,
@@ -18,16 +17,21 @@ export function Provenance({
   sessionViewerUrl?: string;
 }) {
   return (
-    <footer className="mt-10 border-t border-border pt-4 text-xs text-muted">
-      {dishCount} dishes · via Steel {source === 'scrape' ? '/scrape' : 'session + Playwright'}
+    <p className="mt-10 border-t border-gold-soft pt-3 text-center text-base italic text-ink-soft">
+      {copy.dishesRead(dishCount, source === 'scrape' ? copy.scrapePath : copy.browserPath)}
       {sessionViewerUrl && (
         <>
-          {' · '}
-          <a href={sessionViewerUrl} target="_blank" rel="noreferrer" className="text-accent">
-            watch the session
+          {' '}
+          <a
+            href={sessionViewerUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-tomato underline decoration-tomato/40 underline-offset-4 hover:decoration-tomato"
+          >
+            {copy.watchSession}
           </a>
         </>
       )}
-    </footer>
+    </p>
   );
 }

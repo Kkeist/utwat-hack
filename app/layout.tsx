@@ -1,16 +1,20 @@
 import type { Metadata } from 'next';
-import { Cormorant_Garamond, Inter } from 'next/font/google';
+import { Cormorant_Garamond, Courgette } from 'next/font/google';
 import './globals.css';
 
+/** Card text: a menu serif with a true italic for descriptions. */
 const serif = Cormorant_Garamond({
-  variable: '--font-menu-serif',
+  variable: '--font-serif-var',
   subsets: ['latin'],
-  weight: ['400', '600'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
 });
 
-const sans = Inter({
-  variable: '--font-menu-sans',
+/** Sign-painter script: wordmark and section headings only. */
+const script = Courgette({
+  variable: '--font-script-var',
   subsets: ['latin'],
+  weight: '400',
 });
 
 export const metadata: Metadata = {
@@ -20,25 +24,27 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} h-full antialiased`}>
+    <html lang="en" className={`${serif.variable} ${script.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        {/* The table: kraft paper with fibre, always one viewport, behind everything. */}
+        <div aria-hidden className="paper-grain pointer-events-none fixed inset-0 z-0 bg-ground" />
+
         {/*
-          Fixed, not painted into the body background: a `position: fixed`
-          box always covers the current viewport height, no matter how tall
-          the document gets. The previous attempt painted this into body's
-          background with `background-attachment: fixed`, which sizes the
-          image to one viewport height and simply stops there — everything
-          below the first screen fell back to the plain background.
+          The room: green linen walls either side. `position: fixed` boxes size
+          to the viewport, so they run the full height however long the page
+          gets — a `background-attachment: fixed` on body stops after one screen.
         */}
         <div
           aria-hidden
-          className="paper-grain pointer-events-none fixed inset-y-0 left-0 z-0 hidden w-[16%] bg-side-panel min-[900px]:block"
+          className="linen paper-grain pointer-events-none fixed inset-y-0 left-0 z-[1] hidden w-[14%] min-[900px]:block"
         />
         <div
           aria-hidden
-          className="paper-grain pointer-events-none fixed inset-y-0 right-0 z-0 hidden w-[16%] bg-side-panel min-[900px]:block"
+          className="linen paper-grain pointer-events-none fixed inset-y-0 right-0 z-[1] hidden w-[14%] min-[900px]:block"
         />
-        <div className="paper-grain relative z-10 flex min-h-full flex-1 flex-col">{children}</div>
+
+        {/* Content stays clear of the walls: the same 14% is reserved on each side. */}
+        <div className="relative z-10 flex min-h-full flex-1 flex-col min-[900px]:px-[14%]">{children}</div>
       </body>
     </html>
   );
