@@ -81,3 +81,43 @@ export function rankMenu(dishes: Dish[], reviews: string[]) {
   ranked.sort((a, b) => b.score - a.score);
   return { ranked, unranked };
 }
+
+/** Combined shape C actually consumes: a dish plus its review rank, if any. */
+export type RankedDish = Dish & {
+  mentionCount: number;
+  avgSentiment: number;
+  score: number;
+  hasReviewSignal: boolean;
+  /** 1 = best-reviewed, 2 = second-best, etc. null = no review data for this dish. */
+  rank: number | null;
+};
+
+/**
+ * The actual hand-off to workstream C: full dish list, each one annotated
+ * with review rank if we have it. Sorted #1 first, unranked dishes last.
+ */
+export function buildRankedMenu(dishes: Dish[], reviews: string[]): RankedDish[] {
+  const { ranked } = rankMenu(dishes, reviews);
+  const signalByName = new Map(ranked.map((r) => [normalizeDishName(r.dishName), r]));
+  const rankByName = new Map(ranked.map((r, i) => [normalizeDishName(r.dishName), i + 1]));
+
+  const combined: RankedDish[] = dishes.map((dish) => {
+    const key = normalizeDishName(dish.name);
+    const signal = signalByName.get(key);
+    return {
+      ...dish,
+      mentionCount: signal?.mentionCount ?? 0,
+      avgSentiment: signal?.avgSentiment ?? 0,
+      score: signal?.score ?? 0,
+      hasReviewSignal: Boolean(signal),
+      rank: rankByName.get(key) ?? null,
+    };
+  });
+
+  return combined.sort((a, b) => {
+    if (a.rank === null && b.rank === null) return 0;
+    if (a.rank === null) return 1;
+    if (b.rank === null) return -1;
+    return a.rank - b.rank;
+  });
+}
