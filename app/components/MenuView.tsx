@@ -126,7 +126,9 @@ export function MenuView() {
   const ingredientOptions = useMemo(() => {
     const all = new Map<string, string>();
     for (const f of Object.values(facts)) {
-      for (const i of f.ingredients ?? []) if (!all.has(plain(i))) all.set(plain(i), i);
+      for (const i of f.ingredients ?? []) {
+        if (!all.has(plain(i))) all.set(plain(i), i.charAt(0).toUpperCase() + i.slice(1));
+      }
     }
     return Array.from(all.values()).sort((a, b) => a.localeCompare(b));
   }, [facts]);
