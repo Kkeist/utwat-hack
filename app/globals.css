@@ -3,21 +3,23 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * Neutral off-white base, color pulled from the plate illustrations
- * themselves (egg yolk yellow, ketchup red) rather than a large tinted
- * background — the previous tan/cream backgrounds read as dirty.
+ * Vintage Italian-trattoria order-slip register: kraft paper, tomato red,
+ * olive, dark espresso ink. Grain texture (`.paper-grain`) is what keeps a
+ * warm tan from reading as a flat, "dirty" color block — real kraft paper
+ * has visible fiber, a flat fill of the same hex does not.
  */
 :root {
-  --background: #f4f2ec;
-  --awning: #ffffff;
-  --surface: #ffffff;
-  --border: #d8d3c6;
-  --foreground: #262521;
-  --muted: #85817a;
-  --accent: #f2a922;
-  --accent-2: #d94a3d;
-  --ink: #262521;
-  --stripe: #d6c17e;
+  --background: #ddc298;
+  --awning: #f2e2bd;
+  --surface: #f8edd6;
+  --border: #b99863;
+  --foreground: #332516;
+  --muted: #8a7355;
+  --accent: #c1442d;
+  --accent-2: #7a8c4a;
+  --ink: #2c1f13;
+  --stripe: #cf9b3f;
+  --side-panel: #a9814f;
 }
 
 @theme inline {
@@ -30,6 +32,7 @@
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-ink: var(--ink);
+  --color-side-panel: var(--side-panel);
   --font-serif: var(--font-menu-serif);
   --font-sans: var(--font-menu-sans);
 }
@@ -45,6 +48,28 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-menu-sans), system-ui, sans-serif;
+}
+
+/*
+ * Fine grayscale noise, tiled, at very low alpha — reads as paper fiber, not
+ * as a visible pattern. Generated with feTurbulence so no image asset is
+ * needed and it never goes soft at any zoom level.
+ *
+ * Deliberately does NOT set `position` itself — every caller already has one
+ * (fixed, relative) from its own utility classes. Setting `position:
+ * relative` here would fight the `fixed` utility on the side panels: this
+ * plain rule sits outside any `@layer`, so it wins the cascade over a
+ * Tailwind utility regardless of source order.
+ */
+.paper-grain {
+  isolation: isolate;
+}
+.paper-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
 }
 
 /* Shimmer for the enrichment skeletons. Nothing blocks on a lookup. */
