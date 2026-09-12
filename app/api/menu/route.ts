@@ -14,8 +14,10 @@
  * reach the client bundle.
  */
 import { NextResponse } from 'next/server';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { MenuRequestSchema, type ApiError, type MenuResponse } from '@/lib/types';
-import { scrapeMenu } from '@/lib/scrape-menu';
+import { scrapeMenuDetailed } from '@/lib/scrape-menu';
 import { menuLooksReal, parseMenu } from '@/lib/parse-menu';
 import { hashSeed, seededRng, spin } from '@/lib/roulette';
 import { justify } from '@/lib/justify';
@@ -26,7 +28,7 @@ import { SAMPLE_SIGNALS } from '@/lib/fixtures/sample-signals';
 export const runtime = 'nodejs';
 /** Matches the batch ceiling /api/dish enforces via DishRequestSchema. */
 const MAX_PICK_LOOKUPS = 12;
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 function fail(message: string, status = 400) {
   return NextResponse.json<ApiError>({ error: true, message }, { status });
@@ -39,15 +41,50 @@ export async function POST(req: Request) {
   const { url, partySize, seed: pinnedSeed } = body.data;
 
   try {
-    const scraped = await scrapeMenu(url);
+    const trace = await scrapeMenuDetailed(url);
+    const scraped = trace.result;
     const dishes = parseMenu(scraped.markdown);
 
-    if (!menuLooksReal(dishes)) {
-      // Honest error beats a convincing-looking wrong answer. (Design doc §8.)
-      return fail(
-        "I could not find a menu on that page. Try linking the menu page directly.",
-        422,
+    try {
+      const dir = join(process.cwd(), '.cache');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'last-menu.md'), scraped.markdown, 'utf8');
+      writeFileSync(
+        join(dir, 'last-scrape.json'),
+        JSON.stringify(
+          {
+            url,
+            chosenUrl: trace.chosenUrl,
+            source: scraped.source,
+            restaurantName: scraped.restaurantName,
+            markdownChars: scraped.markdown.length,
+            candidates: trace.candidates,
+            tried: trace.tried.map((t) => ({
+              url: t.url,
+              chars: t.chars,
+              thin: t.thin,
+              score: t.score,
+            })),
+            dishCount: dishes.length,
+            priced: dishes.filter((d) => d.priceValue !== undefined).length,
+            dishes: dishes.slice(0, 40).map((d) => ({ name: d.name, price: d.price, category: d.category })),
+            looksReal: menuLooksReal(dishes),
+          },
+          null,
+          2,
+        ),
+        'utf8',
       );
+    } catch {
+      // Diagnostic dump only — never fail the request over it.
+    }
+
+    if (!menuLooksReal(dishes)) {
+      const hint =
+        dishes.length === 0
+          ? 'I could not find a menu on that page. Try linking the menu page directly.'
+          : `I only found ${dishes.length} dish-like line${dishes.length === 1 ? '' : 's'} — not enough to trust as a menu. Try the /menu or /carte page.`;
+      return fail(hint, 422);
     }
 
     // A fresh table each spin, but the seed is returned so any result can be
