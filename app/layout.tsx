@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Courgette } from 'next/font/google';
 import './globals.css';
 
@@ -17,9 +17,45 @@ const script = Courgette({
   weight: '400',
 });
 
+const description = 'Give it a restaurant link and it looks up what each dish on the menu actually is.';
+
 export const metadata: Metadata = {
   title: 'Dishly',
-  description: 'Give it a restaurant link and it looks up what each dish on the menu actually is.',
+  description,
+  applicationName: 'Dishly',
+  appleWebApp: {
+    title: 'Dishly',
+    statusBarStyle: 'default',
+  },
+  manifest: '/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'Dishly',
+    description,
+    images: ['/og-image.png'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Dishly',
+    description,
+    images: ['/og-image.png'],
+  },
+  other: {
+    'msapplication-TileColor': '#2f4434',
+    'msapplication-config': '/browserconfig.xml',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#2f4434',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

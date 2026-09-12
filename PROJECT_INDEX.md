@@ -26,7 +26,8 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 | `app/api/menu`, `app/api/dish` | API routes (workstream C) |
 | `lib/` | Scraping, parsing, lookup, cache, roulette (workstreams A–C) |
 | `lib/fixtures/` | Sample menu markdown, expected parse, canned dish facts |
-| `public/icons/` | fork.png, knife.png, plate-mark.png (hand-drawn art) |
+| `public/icons/` | fork.png, knife.png, plate-mark.png (hand-drawn art), app-icon.png (icon source) |
+| `public/*.png`, `site.webmanifest`, `browserconfig.xml` | Generated icon set, see `tools/build-icons.py` |
 | `scripts/` | probe, warm, screenshot |
 
 ## Reusable components

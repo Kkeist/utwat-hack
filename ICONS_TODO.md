@@ -8,8 +8,13 @@
 - [x] **`public/icons/plate-mark.png`** — the plate illustration inside the
       big "Search" button.
 
-## Not built yet, don't worry about it now
+## Done
 
-`plate-mark.png` will likely double as the source image for the site's
-favicon and home-screen icons later (a separate, bigger task — browser tab
-icon, iOS/Android home-screen icons, etc.). Nothing to do for that yet.
+Full icon set built from `public/icons/app-icon.png` (a fresh plate
+drawing, not `plate-mark.png`) via `tools/build-icons.py`:
+favicon (16/32/48), Apple touch icon, Android/PWA icons (plain +
+maskable, 192/512), Windows tile, and the social-share image. Wired into
+`app/layout.tsx` metadata plus `public/site.webmanifest` and
+`public/browserconfig.xml`.
+
+Re-run `python tools/build-icons.py` after replacing the source image.
