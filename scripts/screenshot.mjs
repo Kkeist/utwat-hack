@@ -27,6 +27,8 @@ for (const [name, w, h] of sizes) {
   await page.waitForTimeout(600);
   await page.screenshot({ path: file('home', name), fullPage: true });
 
+  // The URL field starts empty; fill it so the submit button becomes enabled.
+  await page.fill('input[aria-label="Restaurant URL"]', 'https://example.com/menu');
   await page.click('button[type="submit"]');
   await page.waitForSelector('[data-results]', { timeout: 30000 });
   // Let the background lookups land before the full-view capture.

@@ -12,6 +12,8 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 await page.goto('http://localhost:3000/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(400);
 
+// The URL field starts empty; fill it so the submit button becomes enabled.
+await page.fill('input[aria-label="Restaurant URL"]', 'https://example.com/menu');
 await page.click('button[type="submit"]');
 await page.waitForSelector('[data-results]', { timeout: 30000 });
 await page.waitForTimeout(6000);
