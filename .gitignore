@@ -48,5 +48,9 @@ next-env.d.ts
 /.cache/*
 !/.cache/.gitkeep
 
+# Generated Next.js agent rules. Regenerated on build; local to each checkout.
+/AGENTS.md
+/CLAUDE.md
+
 # UI check screenshots. Regenerate with `node scripts/screenshot.mjs screenshots`.
 /screenshots/

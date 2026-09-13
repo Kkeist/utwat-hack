@@ -15,8 +15,8 @@
  * The Google search URL is BUILT LOCALLY as a string. Never request it.
  */
 import type { Dish, DishFacts } from '@/lib/types';
-import { isMocked } from '@/lib/steel';
-import { cacheGet, cacheSet } from '@/lib/cache';
+import { isMocked, steel } from '@/lib/steel';
+import { cacheGet, cacheSet, normalizeDishName } from '@/lib/cache';
 import { SAMPLE_FACTS } from '@/lib/fixtures';
 
 export function googleSearchUrl(name: string): string {
@@ -26,7 +26,11 @@ export function googleSearchUrl(name: string): string {
 /** Cache-first single lookup. */
 export async function lookupDish(dish: Dish): Promise<DishFacts> {
   const hit = await cacheGet(dish.name);
-  if (hit) return hit;
+  const cachedWell =
+    hit &&
+    (hit.source === 'wikipedia' || hit.source === 'mealdb') &&
+    !/\b(surname|given name|may refer to|disambiguation)\b/i.test(hit.description ?? '');
+  if (cachedWell) return hit;
 
   const [base, meal] = await Promise.all([
     isMocked() ? (SAMPLE_FACTS[dish.name] ?? fallbackFacts(dish)) : fetchFromWikipedia(dish),
@@ -65,26 +69,188 @@ export function fallbackFacts(dish: Dish): DishFacts {
   };
 }
 
-async function fetchFromWikipedia(dish: Dish): Promise<DishFacts> {
-  // TODO(A): steel().scrape on the Wikipedia article for the normalized name.
-  // Take the first sentence of the lead paragraph and metadata.ogImage.
-  // A miss (no article / disambiguation page) returns fallbackFacts(dish) — not an error.
-  return fallbackFacts(dish);
-}
+const WIKI_SUMMARY = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
+const WIKI_SEARCH =
+  'https://en.wikipedia.org/w/api.php?action=opensearch&limit=1&namespace=0&format=json&search=';
+const WIKI_UA = 'Dishly/1.0 (educational restaurant menu app)';
+const WIKI_TIMEOUT_MS = 8000;
 
-const MEALDB_SEARCH = 'https://www.themealdb.com/api/json/v1/1/search.php?s=';
-const MEALDB_TIMEOUT_MS = 6000;
+type WikiSummary = {
+  type?: string;
+  title?: string;
+  extract?: string;
+  thumbnail?: { source?: string };
+  originalimage?: { source?: string };
+};
 
 /** Lowercase ASCII words: "Crème Brûlée" -> "creme brulee". */
 function plainWords(name: string): string[] {
   return name
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z ]/g, ' ')
     .split(/\s+/)
     .filter(Boolean);
 }
+
+/** OpenSearch is fuzzy — "Eggs Norwegian" must not land on the surname Eggen. */
+function titleFitsDish(pageTitle: string, dishName: string): boolean {
+  const dish = plainWords(dishName);
+  const title = plainWords(pageTitle);
+  if (!dish.length || !title.length) return false;
+  const distinctive = dish.filter((w) => w.length >= 5);
+  if (distinctive.length) return distinctive.some((w) => title.includes(w));
+  return dish.every((w) => title.includes(w));
+}
+
+function wikiTitle(name: string): string {
+  return normalizeDishName(name)
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join('_');
+}
+
+function firstSentence(text: string): string | undefined {
+  const t = text.replace(/\s+/g, ' ').trim();
+  if (t.length < 40) return undefined;
+  const match = t.match(/^.+?[.!?](?=\s|$)/);
+  const sentence = (match?.[0] ?? t).trim();
+  return sentence.length >= 40 ? sentence : t;
+}
+
+function looksLikeDisambiguation(text: string): boolean {
+  return /\bmay refer to\b|\bdisambiguation\b/i.test(text);
+}
+
+function photoFromMeta(meta: unknown): string | undefined {
+  if (!meta || typeof meta !== 'object') return undefined;
+  const m = meta as Record<string, unknown>;
+  for (const key of ['ogImage', 'og_image', 'image']) {
+    const v = m[key];
+    if (typeof v === 'string' && /^https?:\/\//.test(v)) return v;
+  }
+  return undefined;
+}
+
+function firstLeadParagraph(markdown: string): string | undefined {
+  const blocks = markdown.replace(/\r\n/g, '\n').split(/\n{2,}/);
+  for (const block of blocks) {
+    const t = block
+      .replace(/^#{1,6}\s+.*$/gm, '')
+      .replace(/^\|.+$/gm, '')
+      .replace(/!\[[^\]]*]\([^)]+\)/g, '')
+      .replace(/\[([^\]]+)]\([^)]+\)/g, '$1')
+      .replace(/[*_]/g, '')
+      .trim();
+    if (t.length < 80) continue;
+    if (looksLikeDisambiguation(t)) return undefined;
+    if (/^(coordinates|this article|from wikipedia)/i.test(t)) continue;
+    return t;
+  }
+}
+
+function factsFromExtract(
+  dish: Dish,
+  extract: string,
+  photoUrl?: string,
+): DishFacts | undefined {
+  if (looksLikeDisambiguation(extract)) return undefined;
+  const description = firstSentence(extract);
+  if (!description) return undefined;
+  return {
+    name: dish.name,
+    description,
+    photoUrl,
+    searchUrl: googleSearchUrl(dish.name),
+    source: 'wikipedia',
+  };
+}
+
+async function wikiSummary(title: string): Promise<WikiSummary | undefined> {
+  const res = await fetch(WIKI_SUMMARY + encodeURIComponent(title.replace(/ /g, '_')), {
+    headers: { 'User-Agent': WIKI_UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(WIKI_TIMEOUT_MS),
+  });
+  if (!res.ok) return undefined;
+  return (await res.json()) as WikiSummary;
+}
+
+async function wikiSearchTitle(query: string): Promise<string | undefined> {
+  const res = await fetch(WIKI_SEARCH + encodeURIComponent(query), {
+    headers: { 'User-Agent': WIKI_UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(WIKI_TIMEOUT_MS),
+  });
+  if (!res.ok) return undefined;
+  const json = (await res.json()) as [string, string[]];
+  return json[1]?.[0];
+}
+
+async function fetchWikiRest(dish: Dish): Promise<DishFacts | undefined> {
+  const titles = [wikiTitle(dish.name), dish.name.trim()].filter(Boolean);
+  const seen = new Set<string>();
+  for (const title of titles) {
+    const key = title.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const json = await wikiSummary(title);
+    if (!json || json.type === 'disambiguation') continue;
+    if (!titleFitsDish(json.title ?? title, dish.name)) continue;
+    const hit = factsFromExtract(
+      dish,
+      json.extract ?? '',
+      json.originalimage?.source ?? json.thumbnail?.source,
+    );
+    if (hit) return hit;
+  }
+
+  const searched = await wikiSearchTitle(dish.name);
+  if (!searched || seen.has(searched.toLowerCase())) return undefined;
+  const json = await wikiSummary(searched);
+  if (!json || json.type === 'disambiguation') return undefined;
+  if (!titleFitsDish(json.title ?? searched, dish.name)) return undefined;
+  return factsFromExtract(
+    dish,
+    json.extract ?? '',
+    json.originalimage?.source ?? json.thumbnail?.source,
+  );
+}
+
+/** Steel /scrape of the article — the path the workplan names. Used when REST misses. */
+async function scrapeWikipedia(dish: Dish): Promise<DishFacts | undefined> {
+  const title = wikiTitle(dish.name);
+  if (!title) return undefined;
+  try {
+    const result = await steel().scrape({
+      url: `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+      format: ['markdown'],
+    });
+    const markdown = result.content.markdown ?? '';
+    if (looksLikeDisambiguation(markdown)) return undefined;
+    const lead = firstLeadParagraph(markdown);
+    if (!lead) return undefined;
+    return factsFromExtract(dish, lead, photoFromMeta(result.metadata));
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchFromWikipedia(dish: Dish): Promise<DishFacts> {
+  if (/^[*_]|^(with|and)\b/i.test(dish.name.trim())) return fallbackFacts(dish);
+  try {
+    const rest = await fetchWikiRest(dish);
+    if (rest) return rest;
+    return fallbackFacts(dish);
+  } catch {
+    const scraped = await scrapeWikipedia(dish);
+    if (scraped) return scraped;
+    return fallbackFacts(dish);
+  }
+}
+
+const MEALDB_SEARCH = 'https://www.themealdb.com/api/json/v1/1/search.php?s=';
+const MEALDB_TIMEOUT_MS = 6000;
 
 type MealRecord = Record<string, string | null>;
 

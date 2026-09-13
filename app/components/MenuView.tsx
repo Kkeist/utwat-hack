@@ -290,6 +290,7 @@ export function MenuView() {
                 <Provenance
                   dishCount={result.dishes.length}
                   source={result.source}
+                  restaurantName={result.restaurantName}
                   sessionViewerUrl={result.sessionViewerUrl}
                 />
               </Card>

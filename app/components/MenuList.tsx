@@ -48,9 +48,12 @@ export function DishGrid({
     );
   }
   return (
-    <ul className="grid gap-4">
-      {dishes.map((dish) => (
-        <li key={dish.name}>
+<ul className="grid gap-4">
+      {dishes.map((dish, i) => (
+        // Index in the key: a real menu can list the same name twice (a dish
+        // repeated across categories, or a market item), and a bare name key
+        // makes React reuse the wrong row.
+        <li key={`${i}-${dish.name}`}>
           <DishCard dish={dish} facts={facts[dish.name]} />
         </li>
       ))}

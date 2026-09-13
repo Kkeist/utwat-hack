@@ -34,4 +34,164 @@ const frites = dishes.find((d) => d.name === 'Steak Frites');
 if (!frites) console.log('\nREGRESSION: Steak Frites vanished from the parse (unanchored `fri`?)');
 else if (classify(frites) !== 'main') console.log(`\nREGRESSION: Steak Frites classified as ${classify(frites)} (unanchored \`tea\`?)`);
 
+const euro = parseMenu(`## Mains
+Duck Confit 31€
+Steak Frites 34 €
+Sole Meunière €38
+Cassoulet 33€
+Ratatouille 24€
+Coq au Vin 29 €
+`);
+if (euro.length < 6 || !menuLooksReal(euro)) {
+  console.log(`\nREGRESSION: euro prices parsed ${euro.length} dishes, real=${menuLooksReal(euro)}`);
+  process.exit(1);
+}
+
+const stacked = parseMenu(`## Le Petit Déjeuner
+Soft-Boiled Egg*
+with Parmesan and multigrain soldiers
+8.00
+
+Steel-Cut Irish Oatmeal
+with poached fruits
+14.00
+
+Eggs Benedict*
+poached eggs, Canadian bacon and hollandaise
+19.00
+
+Avocado and Poached Eggs on Toast*
+26.00
+
+Steak and Eggs*
+34.00
+`);
+if (stacked.length < 5 || !menuLooksReal(stacked) || !stacked.some((d) => d.name === 'Soft-Boiled Egg')) {
+  console.log(`\nREGRESSION: stacked prices parsed ${stacked.length}: ${stacked.map((d) => d.name).join(', ')}`);
+  process.exit(1);
+}
+
+const italicDesc = parseMenu(`## Le Petit Déjeuner
+Soft-Boiled Egg\\*
+*with Parmesan and soldiers*
+8.00
+
+Steel-Cut Irish Oatmeal
+*with poached fruits*
+14.00
+
+Eggs Benedict\\*
+*poached eggs and hollandaise*
+19.00
+
+Avocado Toast\\*
+*with lemon-herb dressing*
+26.00
+
+Steak and Eggs\\*
+*grilled petit tender*
+34.00
+`);
+if (
+  italicDesc.length < 5 ||
+  italicDesc[0]?.name !== 'Soft-Boiled Egg' ||
+  italicDesc.some((d) => d.name.startsWith('with ') || d.name.startsWith('*'))
+) {
+  console.log(`\nREGRESSION: italic descriptions parsed as names: ${italicDesc.map((d) => d.name).join(', ')}`);
+  process.exit(1);
+}
+
+const pdfBold = parseMenu(`**Entrées**
+**Soupe à l'Oignon de ma mamie 20**
+Grandma soup
+**Escargots poêlés 21**
+Snails
+**Terrine Maison 19**
+Terrine
+**Tartare de Truite 24**
+Trout
+**Foie Gras 31**
+Foie
+**Plats**
+**Bœuf Bourguignon 33**
+Beef
+`);
+const onion = pdfBold.find((d) => /soupe/i.test(d.name));
+if (!onion || onion.name.includes('20') || onion.price !== '20' || pdfBold.length < 5) {
+  console.log(`\nREGRESSION: pdf bold prices: ${pdfBold.map((d) => `${d.name}|${d.price}`).join(' ; ')}`);
+  process.exit(1);
+}
+
+const frederick = parseMenu(`## Starters + Shareables
+
+### Buttermilk Fried Chicken
+
+$25
+
+brushed with hot spiced maple, bread and butter pickles, dill ranch
+
+### Warm Spinach & Artichoke Dip
+
+$23
+
+crisp endives, tortilla
+
+## Craveable Classics
+
+### Half Roasted Chicken
+
+39
+
+BBQ-spiced, dry-cured organic chicken
+
+### Harbord Room Burger
+
+$34
+
+fresh ground dry-aged chuck
+
+## Desserts
+
+### Fred's Sundae Pie
+
+$17.5
+
+salted pretzel & graham crust
+
+### A Little Swirl
+
+$8.5
+
+mascarpone & vanilla soft serve
+
+## Salads
+
+Add to any salad:
+
+Grilled chicken breast$11
+
+### Caesar Salad
+
+$21
+
+baby gem hearts, sourdough croutons
+`);
+const fried = frederick.find((d) => d.name === 'Buttermilk Fried Chicken');
+const half = frederick.find((d) => d.name === 'Half Roasted Chicken');
+const pie = frederick.find((d) => d.name === "Fred's Sundae Pie");
+if (
+  frederick.length < 7 ||
+  !menuLooksReal(frederick) ||
+  fried?.price !== '$25' ||
+  fried?.description !== 'brushed with hot spiced maple, bread and butter pickles, dill ranch' ||
+  half?.price !== '39' ||
+  pie?.price !== '$17.5' ||
+  !frederick.some((d) => d.name === 'Caesar Salad')
+) {
+  console.log(
+    `\nREGRESSION: heading-then-price menu: ${frederick.map((d) => `${d.name}|${d.price}`).join(' ; ')}`,
+  );
+  process.exit(1);
+}
+
 process.exit(missing.length || extra.length ? 1 : 0);

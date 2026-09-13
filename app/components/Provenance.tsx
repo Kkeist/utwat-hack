@@ -10,15 +10,19 @@ import { copy } from '../copy';
 export function Provenance({
   dishCount,
   source,
+  restaurantName,
   sessionViewerUrl,
 }: {
   dishCount: number;
   source: ScrapeSource;
+  restaurantName?: string;
   sessionViewerUrl?: string;
 }) {
+  const path = source === 'scrape' ? copy.scrapePath : copy.browserPath;
   return (
     <p className="mt-10 border-t border-gold-soft pt-3 text-center text-base italic text-ink-soft">
-      {copy.dishesRead(dishCount, source === 'scrape' ? copy.scrapePath : copy.browserPath)}
+      {restaurantName ? `${restaurantName} · ` : ''}
+      {copy.dishesRead(dishCount, path)}
       {sessionViewerUrl && (
         <>
           {' '}
