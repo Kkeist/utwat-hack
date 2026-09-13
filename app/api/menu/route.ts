@@ -25,6 +25,7 @@ import { lookupDishes } from '@/lib/dish-lookup';
 import { isMocked } from '@/lib/steel';
 import {
   findGoogleMapsUrl,
+  nearFromMarkdown,
   nearFromUrl,
   reviewQueryName,
   reviewsFileMarkdown,
@@ -47,7 +48,7 @@ function fail(message: string, status = 400) {
   return NextResponse.json<ApiError>({ error: true, message }, { status });
 }
 
-const REVIEW_LOOKUP_MS = 55_000;
+const REVIEW_LOOKUP_MS = 80_000;
 
 async function lookupReviewSignals(
   dishes: Dish[],
@@ -62,7 +63,7 @@ async function lookupReviewSignals(
       scrapeReviews(query, {
         mapsUrl: findGoogleMapsUrl(pageMarkdown ?? ''),
         pageMarkdown,
-        near: nearFromUrl(pageUrl, query),
+        near: nearFromUrl(pageUrl, query) ?? nearFromMarkdown(pageMarkdown ?? ''),
       }),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), REVIEW_LOOKUP_MS)),
     ]);

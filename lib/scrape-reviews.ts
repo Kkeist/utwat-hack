@@ -559,6 +559,25 @@ export function nearFromUrl(pageUrl: string, peeledName?: string): string | unde
   return undefined;
 }
 
+const CITY_HINTS: Array<[RegExp, string]> = [
+  [/\btoronto\b/i, 'Toronto'],
+  [/\bnew york\b|\bnyc\b|\bmanhattan\b|\bsoho\b/i, 'New York'],
+  [/\bparis\b/i, 'Paris'],
+  [/\btokyo\b/i, 'Tokyo'],
+  [/\blondon\b/i, 'London'],
+  [/\bchicago\b/i, 'Chicago'],
+  [/\bsan francisco\b/i, 'San Francisco'],
+];
+
+/** City printed on the restaurant page (address, footer). */
+export function nearFromMarkdown(markdown: string): string | undefined {
+  const text = markdown.slice(0, 8000);
+  for (const [re, city] of CITY_HINTS) {
+    if (re.test(text)) return city;
+  }
+  return undefined;
+}
+
 /**
  * Domain slugs like "Balthazarny" fail as review queries. Prefer a menu word
  * that is a prefix of the slug ("Balthazar" from "Balthazar Egg Sandwich").
