@@ -122,4 +122,76 @@ if (!onion || onion.name.includes('20') || onion.price !== '20' || pdfBold.lengt
   process.exit(1);
 }
 
+const frederick = parseMenu(`## Starters + Shareables
+
+### Buttermilk Fried Chicken
+
+$25
+
+brushed with hot spiced maple, bread and butter pickles, dill ranch
+
+### Warm Spinach & Artichoke Dip
+
+$23
+
+crisp endives, tortilla
+
+## Craveable Classics
+
+### Half Roasted Chicken
+
+39
+
+BBQ-spiced, dry-cured organic chicken
+
+### Harbord Room Burger
+
+$34
+
+fresh ground dry-aged chuck
+
+## Desserts
+
+### Fred's Sundae Pie
+
+$17.5
+
+salted pretzel & graham crust
+
+### A Little Swirl
+
+$8.5
+
+mascarpone & vanilla soft serve
+
+## Salads
+
+Add to any salad:
+
+Grilled chicken breast$11
+
+### Caesar Salad
+
+$21
+
+baby gem hearts, sourdough croutons
+`);
+const fried = frederick.find((d) => d.name === 'Buttermilk Fried Chicken');
+const half = frederick.find((d) => d.name === 'Half Roasted Chicken');
+const pie = frederick.find((d) => d.name === "Fred's Sundae Pie");
+if (
+  frederick.length < 7 ||
+  !menuLooksReal(frederick) ||
+  fried?.price !== '$25' ||
+  fried?.description !== 'brushed with hot spiced maple, bread and butter pickles, dill ranch' ||
+  half?.price !== '39' ||
+  pie?.price !== '$17.5' ||
+  !frederick.some((d) => d.name === 'Caesar Salad')
+) {
+  console.log(
+    `\nREGRESSION: heading-then-price menu: ${frederick.map((d) => `${d.name}|${d.price}`).join(' ; ')}`,
+  );
+  process.exit(1);
+}
+
 process.exit(missing.length || extra.length ? 1 : 0);

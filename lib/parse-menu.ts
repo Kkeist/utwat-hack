@@ -119,7 +119,9 @@ function tryAddDish(
   if (parsed.success) dishes.push(parsed.data);
 }
 
-const BARE_PRICE_LINE = /^\d{1,3}(?:[.,]\d{2})(?:\s*\/\s*\d{1,3}(?:[.,]\d{2}))?\s*$/;
+/** `$25`, `$17.5`, `39`, `8.00`, `19.00 / 29.00` — a line that is only a price. */
+const PRICE_ONLY_LINE =
+  /^(?:[$£€]\s*)?\d{1,3}(?:[.,]\d{1,2})?(?:\s*\/\s*(?:[$£€]\s*)?\d{1,3}(?:[.,]\d{1,2})?)?\s*$/;
 const BOWL_CUP_PRICE = /\b(?:bowl|cup|glass|bottle)\s+(\d{1,3}(?:[.,]\d{2})?)/i;
 
 function unwrapItalics(line: string): string {
@@ -148,14 +150,36 @@ function looksLikeDishName(line: string): boolean {
   }
   if (/^\d{1,2}[./]\d{1,2}/.test(n)) return false;
   if (/^(?:[A-ZÀ-Ÿ] ){2,}[A-ZÀ-Ÿ]$/.test(n)) return false;
+  if (/^add to\b/i.test(n)) return false;
   return true;
 }
+
+type PendingDish = {
+  name: string;
+  description?: string;
+  category?: string;
+  price?: string;
+};
 
 export function parseMenu(markdown: string): Dish[] {
   const dishes: Dish[] = [];
   let category: string | undefined;
-  let pending: { name: string; description?: string; category?: string } | undefined;
+  let pending: PendingDish | undefined;
   const lines = markdown.split('\n');
+
+  const flushPending = () => {
+    if (!pending) return;
+    if (pending.price) {
+      tryAddDish(
+        dishes,
+        pending.name,
+        pending.price,
+        pending.category ?? category,
+        pending.description,
+      );
+    }
+    pending = undefined;
+  };
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i].trim();
@@ -163,41 +187,51 @@ export function parseMenu(markdown: string): Dish[] {
     const italic = /^\*[^*]/.test(raw.replace(/\\([*_])/g, '$1')) && !raw.replace(/\\([*_])/g, '$1').startsWith('**');
     const line = unwrapItalics(raw);
 
-    const heading = line.match(/^#{1,6}\s+(.*)$/);
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
     if (heading) {
-      pending = undefined;
-      category = heading[1].replace(/\*+/g, '').trim();
+      const depth = heading[1].length;
+      const title = heading[2].replace(/\*+/g, '').trim();
+      // h1/h2 and course words are sections. h3+ dish names (Frederick, etc.)
+      // are the name, with the price on a following line.
+      if (depth <= 2 || COURSE_HEADING.test(title) || !looksLikeDishName(title)) {
+        flushPending();
+        category = title;
+        continue;
+      }
+      flushPending();
+      pending = { name: cleanName(title), category };
       continue;
     }
 
     const boldOnly = line.match(/^\*\*([^*]+)\*\*$/);
     if (boldOnly && COURSE_HEADING.test(boldOnly[1].trim())) {
-      pending = undefined;
+      flushPending();
       category = boldOnly[1].trim();
       continue;
     }
-    if (!line.includes('*') && COURSE_HEADING.test(line) && !extractPrice(line) && !BARE_PRICE_LINE.test(line)) {
-      pending = undefined;
+    if (
+      !line.includes('*') &&
+      COURSE_HEADING.test(line) &&
+      !extractPrice(line) &&
+      !PRICE_ONLY_LINE.test(line)
+    ) {
+      flushPending();
       category = line.replace(/[:.]+$/, '').trim();
       continue;
     }
 
     if (isJunkLine(line)) continue;
 
-    const bare = line.match(BARE_PRICE_LINE);
     const bowl = line.match(BOWL_CUP_PRICE);
-    if (bare || (bowl && !/[A-Za-zÀ-ÿ]{8,}/.test(line))) {
-      const raw = bare ? bare[0].trim() : bowl![1];
-      if (pending) {
-        tryAddDish(dishes, pending.name, raw, pending.category ?? category, pending.description);
-        pending = undefined;
-      }
+    if (PRICE_ONLY_LINE.test(line) || (bowl && !/[A-Za-zÀ-ÿ]{8,}/.test(line))) {
+      const priceRaw = PRICE_ONLY_LINE.test(line) ? line.trim() : bowl![1];
+      if (pending) pending.price = priceRaw;
       continue;
     }
 
     // --- Markdown table ---
     if (line.startsWith('|')) {
-      pending = undefined;
+      flushPending();
       const nextLine = (lines[i + 1] ?? '').trim();
       const isSeparator = /^\|(\s*:?-+:?\s*\|)+$/.test(nextLine);
 
@@ -228,7 +262,7 @@ export function parseMenu(markdown: string): Dish[] {
     // --- Bold name: **Name** $12 / **Name 20** (PDF menus) ---
     const bold = line.match(/^\*\*(.+?)\*\*\s*(?:—|-|–)?\s*(.*)$/);
     if (bold) {
-      pending = undefined;
+      flushPending();
       const inner = bold[2] ? `${bold[1]} ${bold[2]}` : bold[1];
       const priced = extractPrice(inner) ?? extractPrice(line);
       const namePart = priced ? peelTrailingPrice(bold[1]).name : bold[1];
@@ -239,7 +273,7 @@ export function parseMenu(markdown: string): Dish[] {
     // --- Plain text: "Name $12", "Name 24 €", "Name — desc — $12" ---
     const priced = extractPrice(line);
     if (priced) {
-      pending = undefined;
+      flushPending();
       let namePart = line.slice(0, priced.index);
       namePart = namePart.split(/[—–]/)[0];
       tryAddDish(dishes, namePart, priced.raw, category);
@@ -247,7 +281,7 @@ export function parseMenu(markdown: string): Dish[] {
     }
 
     if (/[—–]/.test(line)) {
-      pending = undefined;
+      flushPending();
       tryAddDish(dishes, line.split(/[—–]/)[0], undefined, category);
       continue;
     }
@@ -258,10 +292,12 @@ export function parseMenu(markdown: string): Dish[] {
       continue;
     }
     if (looksLikeDishName(line)) {
+      flushPending();
       pending = { name: cleanName(unwrapItalics(line).replace(/\*+$/, '')), category };
     }
   }
 
+  flushPending();
   return dishes;
 }
 
