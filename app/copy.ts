@@ -11,7 +11,7 @@ export const copy = {
   about:
     'Dishly looks up every dish on the menu for you: what the name actually means, what food it is, and a reference photo, so you can find something you will like.',
   urlLabel: 'Restaurant URL',
-  urlPlaceholder: 'Fill in the URL',
+  urlPlaceholder: 'This is an example — press Search',
   partySize: 'Party size',
   search: 'Search',
   back: 'Back',
@@ -39,6 +39,8 @@ export const copy = {
   browserPath: 'session + Playwright',
   watchSession: 'Watch the session',
   madeBy: 'Dishly was built for the UTWAT Hackathon by 404 Brain Not Found.',
-  demoNotice:
-    'This deployment shows only the UI/UX portion I was responsible for. It runs on a fixed example menu and makes no API calls.',
+  demoNotice: [
+    'This deployment shows only the UI/UX portion I was responsible for.',
+    'It runs on a fixed example menu and makes no API calls.',
+  ],
 } as const;
