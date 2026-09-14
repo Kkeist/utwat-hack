@@ -7,9 +7,10 @@ if not exist node_modules (
   call npm install
 )
 
-rem Pick a port that nobody is listening on yet. This never takes over a port
-rem another program or another project is already using.
-set /a PORT=3000
+rem This project has its own port so two projects never share one: on a shared
+rem port the browser shows the other project's cached page. If the port is
+rem taken, move forward to the next one; never take over a port in use.
+set /a PORT=36880
 set /a PORT_LIMIT=PORT+60
 
 :pick_port
@@ -32,6 +33,6 @@ pause
 exit /b 0
 
 :no_port
-echo Every port from 3000 to !PORT_LIMIT! is busy. Close something and try again.
+echo Every port from 36880 to !PORT_LIMIT! is busy. Close something and try again.
 pause
 exit /b 1
