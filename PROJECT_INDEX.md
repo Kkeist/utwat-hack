@@ -6,7 +6,7 @@ on the `ui` branch. Requirements and progress: `DISHLY_PLAN.md`.
 
 ## Run
 
-- `start.bat` — dev server on http://localhost:3000 with `MOCK_STEEL=1`
+- `start.bat` — dev server on http://localhost:36880 with `MOCK_STEEL=1`
   (no API key needed). Any URL-shaped input returns the sample menu.
 - `node scripts/screenshot.mjs screenshots` — phone / tablet / desktop
   screenshots of the entry page, both result views, the dish dialog, a

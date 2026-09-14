@@ -1,5 +1,5 @@
 // Alignment check: node scripts/check-alignment.mjs
-// Needs the dev server on http://localhost:3000 (start.bat).
+// Needs the dev server on http://localhost:36880 (start.bat).
 //
 // Measures, with getBoundingClientRect() and computed style, instead of
 // eyeballing screenshots: every menu-card's left edge and padding, every
@@ -9,7 +9,7 @@ import { chromium } from 'playwright-core';
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-await page.goto('http://localhost:3000/', { waitUntil: 'networkidle' });
+await page.goto('http://localhost:36880/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(400);
 
 // The URL field starts empty; fill it so the submit button becomes enabled.
