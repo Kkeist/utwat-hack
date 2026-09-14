@@ -11,7 +11,8 @@ export const copy = {
   about:
     'Dishly looks up every dish on the menu for you: what the name actually means, what food it is, and a reference photo, so you can find something you will like.',
   urlLabel: 'Restaurant URL',
-  urlPlaceholder: 'This is an example — press Search',
+  urlPlaceholder: 'Fill in the URL',
+  urlExampleValue: 'This is an example — press Search',
   partySize: 'Party size',
   search: 'Search',
   back: 'Back',

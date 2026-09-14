@@ -25,13 +25,6 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "category": "Starters"
     },
     {
-      "name": "Salade Frisée aux Lardons",
-      "price": "$13",
-      "priceValue": 13,
-      "description": "Poached egg, bacon, mustard vinaigrette.",
-      "category": "Starters"
-    },
-    {
       "name": "Caesar Salad",
       "price": "$15",
       "priceValue": 15,
@@ -92,70 +85,6 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "priceValue": 12,
       "description": "Caramelised apple, crème fraîche.",
       "category": "Desserts"
-    },
-    {
-      "name": "Crème Brûlée",
-      "price": "$11",
-      "priceValue": 11,
-      "category": "Desserts"
-    },
-    {
-      "name": "Profiteroles",
-      "price": "$13",
-      "priceValue": 13,
-      "description": "chocolate sauce poured at the table",
-      "category": "Desserts"
-    },
-    {
-      "name": "Cheese Board",
-      "price": "$18",
-      "priceValue": 18,
-      "description": "selection of five",
-      "category": "Desserts"
-    },
-    {
-      "name": "Sancerre",
-      "price": "$16",
-      "priceValue": 16,
-      "description": "glass $16 / bottle $62",
-      "category": "Wine & Drinks"
-    },
-    {
-      "name": "Côtes du Rhône",
-      "price": "$13",
-      "priceValue": 13,
-      "description": "glass $13 / bottle $48",
-      "category": "Wine & Drinks"
-    },
-    {
-      "name": "Kir Royale",
-      "price": "$15",
-      "priceValue": 15,
-      "category": "Wine & Drinks"
-    },
-    {
-      "name": "Espresso",
-      "price": "$4",
-      "priceValue": 4,
-      "category": "Wine & Drinks"
-    },
-    {
-      "name": "Mint Tea",
-      "price": "$6",
-      "priceValue": 6,
-      "category": "Wine & Drinks"
-    },
-    {
-      "name": "Soupe du Jour",
-      "category": "Prix Fixe"
-    },
-    {
-      "name": "Poulet Rôti",
-      "category": "Prix Fixe"
-    },
-    {
-      "name": "Îles Flottantes",
-      "category": "Prix Fixe"
     }
   ],
   "partySize": 4,
@@ -174,25 +103,28 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
     },
     {
       "dish": {
-        "name": "Poulet Rôti",
-        "category": "Prix Fixe"
+        "name": "Soupe à l'Oignon",
+        "price": "$14",
+        "priceValue": 14,
+        "description": "Gratinéed with comté, baked overnight.",
+        "category": "Starters"
       },
       "course": "starter",
       "shared": true,
-      "justification": "The review found nothing requiring further debate. You are having the Poulet Rôti. The table requires an opening position, and this is it. The absence of a stated price has been noted and set aside. With a party of 4, this is where the distribution settles. This is the correct outcome and will be treated as such."
+      "justification": "The finding was reached without dissent. You are having the Soupe à l'Oignon. It sets expectations at the correct level. Gratinéed with comté survived review without amendment. At $14 the outlay is modest and easily justified. Scaled to 4, the order holds its shape. Objections may be filed, but they will not prevail."
     },
     {
       "dish": {
-        "name": "Cassoulet",
-        "price": "$33",
-        "priceValue": 33,
-        "description": "Toulouse sausage, duck, white beans. For two, ideally.",
+        "name": "Sole Meunière",
+        "price": "$38",
+        "priceValue": 38,
+        "description": "Brown butter, capers, lemon",
         "category": "Mains"
       },
       "course": "main",
       "seat": 1,
       "shared": false,
-      "justification": "Let the record show the decision was unanimous. You are having the Cassoulet. It was selected to bear the weight of the meal, and it does. There is corroboration, and it is favourable. Toulouse sausage formed part of the accepted specification. At $33 the expenditure has been authorised in full. With 4 at the table, the order balances precisely here. Later review is not anticipated to disturb this."
+      "justification": "Following review, the outcome is not in question. You are having the Sole Meunière. It answers the question the meal was asking. The record contains 12 corroborating accounts. The presence of capers has been noted and accepted. At $38 the figure reflects the seriousness of the choice. With a party of 4, this is where the distribution settles. Later review is not anticipated to disturb this."
     },
     {
       "dish": {
@@ -209,29 +141,29 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
     },
     {
       "dish": {
-        "name": "Sole Meunière",
-        "price": "$38",
-        "priceValue": 38,
-        "description": "Brown butter, capers, lemon",
+        "name": "Cassoulet",
+        "price": "$33",
+        "priceValue": 33,
+        "description": "Toulouse sausage, duck, white beans. For two, ideally.",
         "category": "Mains"
       },
       "course": "main",
       "seat": 3,
       "shared": false,
-      "justification": "Following review, the outcome is not in question. You are having the Sole Meunière. It answers the question the meal was asking. The record contains 12 corroborating accounts. The presence of capers has been noted and accepted. At $38 the figure reflects the seriousness of the choice. With a party of 4, this is where the distribution settles. Later review is not anticipated to disturb this."
+      "justification": "Let the record show the decision was unanimous. You are having the Cassoulet. It was selected to bear the weight of the meal, and it does. There is corroboration, and it is favourable. Toulouse sausage formed part of the accepted specification. At $33 the expenditure has been authorised in full. With 4 at the table, the order balances precisely here. Later review is not anticipated to disturb this."
     },
     {
       "dish": {
-        "name": "Steak Tartare",
-        "price": "$27",
-        "priceValue": 27,
-        "description": "hand-cut, capers, cornichon, egg yolk",
+        "name": "Coq au Vin",
+        "price": "$29",
+        "priceValue": 29,
+        "description": "Red wine, pearl onions, lardons",
         "category": "Mains"
       },
       "course": "main",
       "seat": 4,
       "shared": false,
-      "justification": "The file is complete and the conclusion entered. You are having the Steak Tartare. Everything ordered after this is support. Due weight was given to hand-cut. At $27 the figure attracted no scrutiny worth recording. With a party of 4, this is where the distribution settles. It is difficult to see the argument against it."
+      "justification": "The finding was reached without dissent. You are having the Coq au Vin. The remainder of the order arranges itself around it. Red wine, as described, raised no objection. At $29 it is priced in line with its function. The seating of 4 was taken into account and changes nothing. Nothing in the record contradicts it."
     },
     {
       "dish": {
@@ -289,6 +221,14 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Soupe à l'Oignon",
       "description": "French onion soup is a soup of onions which are sautéed and then cooked in meat stock or water, usually served gratinéed with croutons or a larger piece of bread covered with cheese floating on top.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Soupe_%C3%A0_l%27oignon.jpg/960px-Soupe_%C3%A0_l%27oignon.jpg",
+      "ingredients": [
+        "onion",
+        "beef stock",
+        "gruyère cheese",
+        "baguette",
+        "butter",
+        "thyme"
+      ],
       "searchUrl": "https://www.google.com/search?q=Soupe%20%C3%A0%20l'Oignon%20dish",
       "source": "wikipedia"
     },
@@ -296,19 +236,28 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Escargots",
       "description": "Snails are eaten by humans in many areas such as Africa, Southeast Asia and Mediterranean Europe, while in other cultures, snails are seen as a taboo food.",
       "photoUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Caracoles-del-restaurante-granero.jpg",
+      "ingredients": [
+        "snails",
+        "garlic",
+        "butter",
+        "parsley"
+      ],
       "searchUrl": "https://www.google.com/search?q=Escargots%20dish",
       "source": "wikipedia"
-    },
-    "Salade Frisée aux Lardons": {
-      "name": "Salade Frisée aux Lardons",
-      "description": "Poached egg, bacon, mustard vinaigrette.",
-      "searchUrl": "https://www.google.com/search?q=Salade%20Fris%C3%A9e%20aux%20Lardons%20dish",
-      "source": "menu"
     },
     "Caesar Salad": {
       "name": "Caesar Salad",
       "description": "A Caesar salad, also known as Caesar's salad, is a green salad of romaine lettuce and croutons commonly dressed with lemon juice, olive oil, eggs, Worcestershire sauce, anchovies, garlic, Dijon mustard, Parmesan and black pepper.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Caesar_salad_%282%29.jpg/960px-Caesar_salad_%282%29.jpg",
+      "ingredients": [
+        "romaine lettuce",
+        "croutons",
+        "parmesan",
+        "anchovy",
+        "garlic",
+        "lemon juice",
+        "egg"
+      ],
       "searchUrl": "https://www.google.com/search?q=Caesar%20Salad%20dish",
       "source": "wikipedia"
     },
@@ -316,6 +265,12 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Steak Frites",
       "description": "Steak frites, meaning \"steak [and] chipped potatoes\" in French, is a dish consisting of beefsteak accompanied by fried chipped potatoes.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Reel_and_Brand_-_September_2021_-_Sarah_Stierch_05.jpg/960px-Reel_and_Brand_-_September_2021_-_Sarah_Stierch_05.jpg",
+      "ingredients": [
+        "beef steak",
+        "potato",
+        "butter",
+        "parsley"
+      ],
       "searchUrl": "https://www.google.com/search?q=Steak%20Frites%20dish",
       "source": "wikipedia"
     },
@@ -323,6 +278,13 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Duck Confit",
       "description": "Duck confit is a French dish made with whole duck.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Confitdecanard.jpg/960px-Confitdecanard.jpg",
+      "ingredients": [
+        "duck leg",
+        "garlic",
+        "thyme",
+        "duck fat",
+        "salt"
+      ],
       "searchUrl": "https://www.google.com/search?q=Duck%20Confit%20dish",
       "source": "wikipedia"
     },
@@ -330,6 +292,14 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Coq au Vin",
       "description": "Coq au vin is a French dish of chicken braised with wine, lardons, mushrooms, and optionally garlic.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Gourmet_coq_au_vin.jpg/960px-Gourmet_coq_au_vin.jpg",
+      "ingredients": [
+        "chicken",
+        "red wine",
+        "bacon",
+        "mushroom",
+        "pearl onion",
+        "garlic"
+      ],
       "searchUrl": "https://www.google.com/search?q=Coq%20au%20Vin%20dish",
       "source": "wikipedia"
     },
@@ -337,6 +307,13 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Sole Meunière",
       "description": "Sole meunière is a classic French fish dish consisting of sole – floured and fried – and served with hot melted butter, lemon juice, and parsley.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Sole_meuniere_%284689490702%29.jpg/960px-Sole_meuniere_%284689490702%29.jpg",
+      "ingredients": [
+        "sole",
+        "butter",
+        "lemon",
+        "parsley",
+        "flour"
+      ],
       "searchUrl": "https://www.google.com/search?q=Sole%20Meuni%C3%A8re%20dish",
       "source": "wikipedia"
     },
@@ -344,6 +321,15 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Ratatouille",
       "description": "Ratatouille is a traditional French vegetable dish originating in the Provence region of southern France, particularly associated with Nice and its surrounding region.",
       "photoUrl": "https://upload.wikimedia.org/wikipedia/commons/3/37/Ratatouille_home_cooked.jpg",
+      "ingredients": [
+        "eggplant",
+        "zucchini",
+        "bell pepper",
+        "tomato",
+        "onion",
+        "garlic",
+        "basil"
+      ],
       "searchUrl": "https://www.google.com/search?q=Ratatouille%20dish",
       "source": "wikipedia"
     },
@@ -351,6 +337,14 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Cassoulet",
       "description": "Cassoulet is a rich stew originating in southern France.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Bowl_of_cassoulet.JPG/960px-Bowl_of_cassoulet.JPG",
+      "ingredients": [
+        "white bean",
+        "duck",
+        "pork sausage",
+        "bacon",
+        "garlic",
+        "onion"
+      ],
       "searchUrl": "https://www.google.com/search?q=Cassoulet%20dish",
       "source": "wikipedia"
     },
@@ -358,6 +352,14 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Steak Tartare",
       "description": "Steak tartare, or tartar steak, is a French dish of raw ground (minced) beef.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Classic_steak_tartare.jpg/960px-Classic_steak_tartare.jpg",
+      "ingredients": [
+        "beef",
+        "egg yolk",
+        "caper",
+        "onion",
+        "cornichon",
+        "mustard"
+      ],
       "searchUrl": "https://www.google.com/search?q=Steak%20Tartare%20dish",
       "source": "wikipedia"
     },
@@ -365,67 +367,14 @@ export const DEMO_MENU_RESPONSE: MenuResponse = {
       "name": "Tarte Tatin",
       "description": "The tarte Tatin is a tart in which the fruit is caramelized in butter and sugar before the tart is baked.",
       "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Franse_tarte_tatin.jpg/960px-Franse_tarte_tatin.jpg",
+      "ingredients": [
+        "apple",
+        "butter",
+        "sugar",
+        "puff pastry"
+      ],
       "searchUrl": "https://www.google.com/search?q=Tarte%20Tatin%20dish",
       "source": "wikipedia"
-    },
-    "Crème Brûlée": {
-      "name": "Crème Brûlée",
-      "searchUrl": "https://www.google.com/search?q=Cr%C3%A8me%20Br%C3%BBl%C3%A9e%20dish",
-      "source": "none"
-    },
-    "Profiteroles": {
-      "name": "Profiteroles",
-      "description": "chocolate sauce poured at the table",
-      "searchUrl": "https://www.google.com/search?q=Profiteroles%20dish",
-      "source": "menu"
-    },
-    "Cheese Board": {
-      "name": "Cheese Board",
-      "description": "selection of five",
-      "searchUrl": "https://www.google.com/search?q=Cheese%20Board%20dish",
-      "source": "menu"
-    },
-    "Sancerre": {
-      "name": "Sancerre",
-      "description": "glass $16 / bottle $62",
-      "searchUrl": "https://www.google.com/search?q=Sancerre%20dish",
-      "source": "menu"
-    },
-    "Côtes du Rhône": {
-      "name": "Côtes du Rhône",
-      "description": "glass $13 / bottle $48",
-      "searchUrl": "https://www.google.com/search?q=C%C3%B4tes%20du%20Rh%C3%B4ne%20dish",
-      "source": "menu"
-    },
-    "Kir Royale": {
-      "name": "Kir Royale",
-      "searchUrl": "https://www.google.com/search?q=Kir%20Royale%20dish",
-      "source": "none"
-    },
-    "Espresso": {
-      "name": "Espresso",
-      "searchUrl": "https://www.google.com/search?q=Espresso%20dish",
-      "source": "none"
-    },
-    "Mint Tea": {
-      "name": "Mint Tea",
-      "searchUrl": "https://www.google.com/search?q=Mint%20Tea%20dish",
-      "source": "none"
-    },
-    "Soupe du Jour": {
-      "name": "Soupe du Jour",
-      "searchUrl": "https://www.google.com/search?q=Soupe%20du%20Jour%20dish",
-      "source": "none"
-    },
-    "Poulet Rôti": {
-      "name": "Poulet Rôti",
-      "searchUrl": "https://www.google.com/search?q=Poulet%20R%C3%B4ti%20dish",
-      "source": "none"
-    },
-    "Îles Flottantes": {
-      "name": "Îles Flottantes",
-      "searchUrl": "https://www.google.com/search?q=%C3%8Eles%20Flottantes%20dish",
-      "source": "none"
     }
   }
 };

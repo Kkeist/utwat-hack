@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { copy } from '../copy';
 
 export function UrlForm({ onSubmit }: { onSubmit: (url: string, partySize: number) => void }) {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState<string>(copy.urlExampleValue);
   const [partySize, setPartySize] = useState(2);
 
   const clamp = (n: number) => Math.min(12, Math.max(1, n));
