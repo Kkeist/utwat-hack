@@ -26,7 +26,10 @@ export default function Home() {
         />
       </main>
 
-      <footer className="pb-8 text-center text-base italic text-ink-soft">{copy.madeBy}</footer>
+      <footer className="mx-auto w-full max-w-[44rem] px-4 pb-8 text-center text-base italic text-ink-soft sm:px-6">
+        <p>{copy.madeBy}</p>
+        <p className="mt-1 text-sm not-italic text-ink-soft/80">{copy.demoNotice}</p>
+      </footer>
     </>
   );
 }

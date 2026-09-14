@@ -31,7 +31,6 @@ export const copy = {
   exclude: 'Exclude',
   ingredientPlaceholder: 'Type an ingredient',
   noIngredientsYet: 'Ingredients appear as dishes are looked up.',
-  stillEnriching: 'Dish details are still loading — a search or filter may miss a dish until it finishes.',
   remove: (name: string) => `Remove ${name}`,
   clear: 'Clear',
   dishesRead: (count: number, path: string) =>
@@ -39,6 +38,7 @@ export const copy = {
   scrapePath: '/scrape',
   browserPath: 'session + Playwright',
   watchSession: 'Watch the session',
-  madeBy: 'made by 404 Brain Not Found',
-  genericError: 'Something went wrong.',
+  madeBy: 'Dishly was built for the UTWAT Hackathon by 404 Brain Not Found.',
+  demoNotice:
+    'This deployment shows only the UI/UX portion I was responsible for. It runs on a fixed example menu and makes no API calls.',
 } as const;

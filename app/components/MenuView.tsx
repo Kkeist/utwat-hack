@@ -2,17 +2,16 @@
 /**
  * OWNER: Workstream D (UI)
  *
- * The result page. Reads the restaurant URL and party size from the query
- * string, asks /api/menu, then looks every dish up in the background in
- * batches of 12 (the /api/dish ceiling) so photos and tags fill in while
- * the user reads. Search is a client-side filter over what is already
- * loaded — name, the menu's line, course, ingredients, description — with
- * accents ignored. The view choice is remembered in the browser.
+ * The result page. This portfolio deploy has no backend, so it always shows
+ * the same fixed example menu (lib/fixtures/demo-response.ts) instead of
+ * scraping the URL the user typed. Search is a client-side filter over the
+ * loaded list — name, the menu's line, course, ingredients, description —
+ * with accents ignored. The view choice is remembered in the browser.
  */
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { useSearchParams } from 'next/navigation';
-import type { Dish, DishFacts, MenuResponse } from '@/lib/types';
+import type { Dish } from '@/lib/types';
 import { copy } from '../copy';
+import { DEMO_MENU_RESPONSE } from '@/lib/fixtures/demo-response';
 import { Card, SectionTitle } from './Card';
 import { ButtonLink, SearchField, ToggleGroup } from './controls';
 import { DishDetail } from './DishDetail';
@@ -22,8 +21,6 @@ import { DishGrid, MenuList, type MenuView as View } from './MenuList';
 import { Modal } from './Modal';
 import { Provenance } from './Provenance';
 import { Skeleton } from './Skeleton';
-
-const BATCH = 12;
 
 /**
  * The remembered view, as an external store so the server renders 'full'
@@ -62,21 +59,31 @@ function plain(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
-export function MenuView() {
-  const params = useSearchParams();
-  const url = params.get('url') ?? '';
-  const partySize = Math.min(12, Math.max(1, Number(params.get('party')) || 2));
+/** The one result this deploy ever shows — see lib/fixtures/demo-response.ts. */
+const result = DEMO_MENU_RESPONSE;
+const facts = DEMO_MENU_RESPONSE.facts;
+const partySize = DEMO_MENU_RESPONSE.partySize;
 
-  const [result, setResult] = useState<MenuResponse | null>(null);
-  const [facts, setFacts] = useState<Record<string, DishFacts>>({});
-  const [error, setError] = useState<string | null>(null);
-  const [enriching, setEnriching] = useState(false);
+/** Every ingredient any looked-up dish has, once (case-insensitive), alphabetical. */
+const ingredientOptions = (() => {
+  const all = new Map<string, string>();
+  for (const f of Object.values(facts)) {
+    for (const i of f.ingredients ?? []) {
+      if (!all.has(plain(i))) all.set(plain(i), i.charAt(0).toUpperCase() + i.slice(1));
+    }
+  }
+  return Array.from(all.values()).sort((a, b) => a.localeCompare(b));
+})();
+
+export function MenuView() {
   const [searchText, setSearchText] = useState('');
   const [query, setQuery] = useState('');
   const [ingredientMode, setIngredientMode] = useState<IngredientMode>('include');
   const [ingredients, setIngredients] = useState<string[]>([]);
   const view = useSyncExternalStore(subscribeView, readView, () => 'full' as View);
   const [openDish, setOpenDish] = useState<Dish | null>(null);
+  /** A brief pause before the result appears, so the loading skeleton still shows. */
+  const [ready, setReady] = useState(false);
 
   /** Filtering runs 200ms after typing stops, not on every keystroke. */
   useEffect(() => {
@@ -85,93 +92,9 @@ export function MenuView() {
   }, [searchText]);
 
   useEffect(() => {
-    if (!url) return;
-    let cancelled = false;
-
-    async function enrich(dishes: Dish[]) {
-      const res = await fetch('/api/dish', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ dishes }),
-      });
-      if (!res.ok || cancelled) return;
-      const json = await res.json();
-      setFacts((prev) => ({ ...json.facts, ...prev }));
-    }
-
-    /**
-     * Optional: ask Claude for better-written verdicts. The templated text is
-     * already on screen, so this only ever replaces it with something better —
-     * an empty response means Claude was unreachable or unconfigured, and the
-     * template stays with no user-visible difference.
-     */
-    async function upgradeVerdicts(menu: MenuResponse) {
-      if (!menu.picks.length) return;
-      try {
-        const res = await fetch('/api/justify', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ picks: menu.picks, partySize: menu.partySize, signals: menu.signals }),
-        });
-        if (!res.ok || cancelled) return;
-        const { justifications } = await res.json();
-        if (!justifications || !Object.keys(justifications).length) return;
-        setResult((prev) =>
-          prev && {
-            ...prev,
-            picks: prev.picks.map((p) => ({ ...p, justification: justifications[p.dish.name] ?? p.justification })),
-          },
-        );
-      } catch {
-        // Keep the templated text. Not a user-visible failure.
-      }
-    }
-
-    async function load() {
-      setError(null);
-      setResult(null);
-      setFacts({});
-      setEnriching(false);
-      try {
-        const res = await fetch('/api/menu', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ url, partySize }),
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.message ?? copy.genericError);
-        if (cancelled) return;
-        const menu = json as MenuResponse;
-        setResult(menu);
-        setFacts(menu.facts);
-        void upgradeVerdicts(menu);
-        const cold = menu.dishes.filter((d) => !menu.facts[d.name]);
-        if (cold.length) setEnriching(true);
-        for (let i = 0; i < cold.length; i += BATCH) {
-          await enrich(cold.slice(i, i + BATCH));
-        }
-        if (!cancelled) setEnriching(false);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : copy.genericError);
-      }
-    }
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [url, partySize]);
-
-  /** Every ingredient any looked-up dish has, once (case-insensitive), alphabetical. */
-  const ingredientOptions = useMemo(() => {
-    const all = new Map<string, string>();
-    for (const f of Object.values(facts)) {
-      for (const i of f.ingredients ?? []) {
-        if (!all.has(plain(i))) all.set(plain(i), i.charAt(0).toUpperCase() + i.slice(1));
-      }
-    }
-    return Array.from(all.values()).sort((a, b) => a.localeCompare(b));
-  }, [facts]);
+    const id = setTimeout(() => setReady(true), 500);
+    return () => clearTimeout(id);
+  }, []);
 
   /**
    * Text query over everything known about a dish, then the ingredient
@@ -180,7 +103,6 @@ export function MenuView() {
    * cannot match an Include and is kept by an Exclude).
    */
   const matches = useMemo(() => {
-    if (!result) return [];
     const q = plain(query.trim());
     return result.dishes.filter((dish) => {
       const f = facts[dish.name];
@@ -199,12 +121,12 @@ export function MenuView() {
       }
       return true;
     });
-  }, [result, facts, query, ingredients, ingredientMode]);
+  }, [query, ingredients, ingredientMode]);
 
   /** The verdict for a dish, if it was one of the roulette's picks. */
   const verdictFor = useCallback(
-    (name: string) => result?.picks.find((p) => p.dish.name === name)?.justification,
-    [result],
+    (name: string) => result.picks.find((p) => p.dish.name === name)?.justification,
+    [],
   );
 
   const close = useCallback(() => setOpenDish(null), []);
@@ -235,8 +157,8 @@ export function MenuView() {
                 />
               </div>
             </div>
-            {result && <p className="mt-3 italic text-ink-soft">{hostOf(result.url)}</p>}
-            {result && (
+            {ready && <p className="mt-3 italic text-ink-soft">{hostOf(result.url)}</p>}
+            {ready && (
               <div className="mt-3">
                 <IngredientFilter
                   options={ingredientOptions}
@@ -249,9 +171,7 @@ export function MenuView() {
             )}
           </Card>
 
-          {error && <p className="text-center text-tomato">{error}</p>}
-
-          {!result && !error && (
+          {!ready && (
             <Card>
               <SectionTitle>{copy.readingMenu}</SectionTitle>
               <div className="mt-6 grid gap-3">
@@ -262,7 +182,7 @@ export function MenuView() {
             </Card>
           )}
 
-          {result && (
+          {ready && (
             <div data-results className="grid gap-8 sm:gap-10">
               {result.picks.length > 0 && !filtering && (
                 <Card>
@@ -281,9 +201,6 @@ export function MenuView() {
 
               <Card>
                 <SectionTitle>{copy.menuTitle}</SectionTitle>
-                {enriching && filtering && (
-                  <p className="mt-2 text-center text-base italic text-ink-soft">{copy.stillEnriching}</p>
-                )}
                 <div className="mt-8">
                   <MenuList dishes={matches} facts={facts} view={view} onOpen={setOpenDish} />
                 </div>
@@ -299,7 +216,10 @@ export function MenuView() {
         </div>
       </main>
 
-      <footer className="pb-8 text-center text-base italic text-ink-soft">{copy.madeBy}</footer>
+      <footer className="mx-auto w-full max-w-[44rem] px-4 pb-8 text-center text-base italic text-ink-soft sm:px-6">
+        <p>{copy.madeBy}</p>
+        <p className="mt-1 text-sm not-italic text-ink-soft/80">{copy.demoNotice}</p>
+      </footer>
 
       <Modal open={openDish !== null} onClose={close}>
         {openDish && (

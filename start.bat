@@ -26,7 +26,6 @@ echo Once it says "Ready", open http://localhost:!PORT! in your browser.
 echo Close this window to stop the server.
 echo.
 
-set MOCK_STEEL=1
 call npm run dev -- --port !PORT!
 
 pause
